@@ -5,12 +5,15 @@ import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.CollectionType;
 import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metamodel.ValueDefinition;
+import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 
 public class FieldDefinition {
 
   private final Object definition;
 
   private ValueDefinition value;
+
+  private JoinConditionDefinition joinCondition;
 
   private boolean collection;
 
@@ -100,6 +103,14 @@ public class FieldDefinition {
 
   public void setCollection(boolean collection) {
     this.collection = collection;
+  }
+
+  public JoinConditionDefinition getJoinCondition() {
+    return joinCondition;
+  }
+
+  public void setJoinCondition(JoinConditionDefinition joinCondition) {
+    this.joinCondition = joinCondition;
   }
 
   @SuppressWarnings("unchecked")
