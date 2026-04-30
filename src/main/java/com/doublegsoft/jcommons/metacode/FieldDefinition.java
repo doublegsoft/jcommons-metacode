@@ -13,7 +13,7 @@ public class FieldDefinition {
 
   private ValueDefinition value;
 
-  private JoinConditionDefinition joinCondition;
+  private TypeDefinition reference;
 
   private boolean collection;
 
@@ -103,14 +103,6 @@ public class FieldDefinition {
 
   public void setCollection(boolean collection) {
     this.collection = collection;
-  }
-
-  public JoinConditionDefinition getJoinCondition() {
-    return joinCondition;
-  }
-
-  public void setJoinCondition(JoinConditionDefinition joinCondition) {
-    this.joinCondition = joinCondition;
   }
 
   @SuppressWarnings("unchecked")

@@ -3,7 +3,11 @@ package com.doublegsoft.jcommons.metacode;
 import com.doublegsoft.jcommons.metabean.AttributeDefinition;
 import com.doublegsoft.jcommons.metabean.ModelDefinition;
 import com.doublegsoft.jcommons.metabean.ObjectDefinition;
+import com.doublegsoft.jcommons.metabean.type.CollectionType;
 import com.doublegsoft.jcommons.metamodel.ValueDefinition;
+import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
+import com.doublegsoft.jcommons.metamodel.dataset.JoinPredicateDefinition;
+import com.doublegsoft.jcommons.utils.Strings;
 
 import java.util.*;
 
@@ -58,7 +62,8 @@ public class FlowDefinition {
     AttributeDefinition valAttr = detailObj.getAttribute(valAttrName);
     AttributeDefinition[] masterIdAttrs = detailObj.getIdentifiableAttributes();
     AttributeDefinition[] detailRefAttrs = detailObj.getCustomAttributes(masterObj);
-    types.add(new TypeDefinition(masterObj, dataModel));
+    TypeDefinition masterType = new TypeDefinition(masterObj, dataModel);
+    types.add(masterType);
 
     if (masterIdAttrs.length == 0) {
       throw new DefinitionException("\"" + detailObjName + "\"没有标识属性定义！");
@@ -70,26 +75,26 @@ public class FlowDefinition {
       if (attr.isLabelled("persistence") || attr.isLabelled("original")) {
         continue;
       }
-      TypeDefinition fieldOwner = new TypeDefinition(detailObj, dataModel);
+      TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
       for (AttributeDefinition refAttr : detailRefAttrs) {
         FieldDefinition refAttrField = new FieldDefinition(refAttr);
         ValueDefinition value = new ValueDefinition();
         value.setAttributeValue(masterIdAttrs[0]);
         refAttrField.setValue(value);
-        fieldOwner.addField(refAttrField);
+        detailType.addField(refAttrField);
       }
       FieldDefinition keyAttrField = new FieldDefinition(keyAttr);
       ValueDefinition keyAttrValue = new ValueDefinition();
       keyAttrValue.setString(attr.getName());
       keyAttrField.setValue(keyAttrValue);
-      fieldOwner.addField(keyAttrField);
+      detailType.addField(keyAttrField);
 
       FieldDefinition valAttrField = new FieldDefinition(valAttr);
       ValueDefinition valAttrValue = new ValueDefinition();
       keyAttrValue.setAttributeValue(attr);
       keyAttrField.setValue(valAttrValue);
-      fieldOwner.addField(valAttrField);
-      types.add(fieldOwner);
+      detailType.addField(valAttrField);
+      types.add(detailType);
     }
   }
 
@@ -117,7 +122,8 @@ public class FlowDefinition {
     AttributeDefinition valAttr = detailObj.getAttribute(valAttrName);
     AttributeDefinition[] masterIdAttrs = detailObj.getIdentifiableAttributes();
     AttributeDefinition[] detailRefAttrs = detailObj.getCustomAttributes(masterObj);
-    types.add(new TypeDefinition(masterObj, dataModel));
+    TypeDefinition masterType = new TypeDefinition(masterObj, dataModel);
+    types.add(masterType);
 
     if (masterIdAttrs.length == 0) {
       throw new DefinitionException("\"" + detailObjName + "\"没有标识属性定义！");
@@ -125,33 +131,31 @@ public class FlowDefinition {
     if (detailRefAttrs.length == 0) {
       throw new DefinitionException("\"" + detailObjName + "\"没有属性引用到\"" + masterObjName + "\"定义！");
     }
-    for (AttributeDefinition attr : masterObj.getAttributes()) {
-      // TODO
-    }
+
     for (AttributeDefinition attr : obj.getAttributes()) {
       if (attr.isLabelled("persistence") || attr.isLabelled("original")) {
         continue;
       }
-      TypeDefinition fieldOwner = new TypeDefinition(detailObj, dataModel);
+      TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
       for (AttributeDefinition refAttr : detailRefAttrs) {
         FieldDefinition refAttrField = new FieldDefinition(refAttr);
         ValueDefinition value = new ValueDefinition();
         value.setAttributeValue(masterIdAttrs[0]);
         refAttrField.setValue(value);
-        fieldOwner.addField(refAttrField);
+        detailType.addField(refAttrField);
       }
       FieldDefinition keyAttrField = new FieldDefinition(keyAttr);
       ValueDefinition keyAttrValue = new ValueDefinition();
       keyAttrValue.setString(attr.getName());
       keyAttrField.setValue(keyAttrValue);
-      fieldOwner.addField(keyAttrField);
+      detailType.addField(keyAttrField);
 
       FieldDefinition valAttrField = new FieldDefinition(valAttr);
       ValueDefinition valAttrValue = new ValueDefinition();
       keyAttrValue.setAttributeValue(attr);
       keyAttrField.setValue(valAttrValue);
-      fieldOwner.addField(valAttrField);
-      types.add(fieldOwner);
+      detailType.addField(valAttrField);
+      types.add(detailType);
     }
   }
 
@@ -174,42 +178,80 @@ public class FlowDefinition {
 
   private void buildForObject() {
     ObjectDefinition obj = root.getDefinition();
-    if (obj.isLabelled("pivot") || obj.isLabelled("meta") || obj.isLabelled("extension")) {
+    if (obj.isLabelled("pivot") ||
+        obj.isLabelled("meta") ||
+        obj.isLabelled("extension")) {
       return;
     }
     Map<String, TypeDefinition> existingTypes = new HashMap<>();
+    Set<AttributeDefinition> existingOrigAttrs = new HashSet<>();
     for (AttributeDefinition attr : obj.getAttributes()) {
       TypeDefinition type = null;
       if (attr.isLabelled("persistence")) {
-        // 自然的数据对象
+        // 数据对象
         type = existingTypes.get(attr.getParent().getName());
-        if (!existingTypes.containsKey(attr.getParent().getName())) {
+        if (type == null) {
           type = new TypeDefinition(new ObjectDefinition(
               attr.getParent().getName(), dummyModel), dataModel);
           existingTypes.put(attr.getParent().getName(), type);
           types.add(type);
+          buildReferences(type);
+        }
+        if (attr.getType().isCustom()) {
+          ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
+          type = new TypeDefinition(new ObjectDefinition(
+              attr.getType().getName(), dummyModel), dataModel);
+          existingTypes.put(attr.getParent().getName(), type);
+          types.add(type);
+          if (obj.getCustomAttributes(refObj).length > 1) {
+            type.setVariable(attr.getName());
+          }
+          buildReferences(type);
         }
         FieldDefinition field = new FieldDefinition(attr);
         type.addField(field);
       } else if (attr.isLabelled("original")) {
-        // 衍生的领域对象
+        // 合成对象、聚合对象
         String origObjName = attr.getLabelledOption("original", "object");
         String origAttrName = attr.getLabelledOption("original", "attribute");
+        String origAlias = attr.getLabelledOption("original", "alias");
+        String prefixAlias = "";
+        if (origAlias != null) {
+          prefixAlias = origAlias + "_";
+        }
         ObjectDefinition origObj = dataModel.findObjectByName(origObjName);
         AttributeDefinition origObjAttr = origObj.getAttribute(origAttrName);
-        type = existingTypes.get(origObjName);
-        if (!existingTypes.containsKey(origObjName)) {
+        type = existingTypes.get(prefixAlias + origObjName);
+        if (type == null) {
           type = new TypeDefinition(new ObjectDefinition(origObjName, dummyModel), dataModel);
-          existingTypes.put(origObjName, type);
+          existingTypes.put(prefixAlias + origObjName, type);
           types.add(type);
+          if (!Strings.isEmpty(origAlias)) {
+            type.setVariable(origAlias);
+          }
+          buildReferences(type);
         }
         FieldDefinition field = new FieldDefinition(origObjAttr);
         type.addField(field);
       } else if (attr.getType().isCollection()) {
+        CollectionType collType = (CollectionType) attr.getType();
+        ObjectDefinition compObj = (ObjectDefinition) collType.getComponentType();
         if (attr.isLabelled("conjunction")) {
-
+          String conjObjName = attr.getLabelledOption("conjunction", "object");
+          ObjectDefinition conjObj = dataModel.findObjectByName(conjObjName);
+          TypeDefinition conjType = new TypeDefinition(conjObj, dataModel);
+          conjType.setCollection(true);
+          TypeDefinition compType = new TypeDefinition(compObj, dataModel);
+          compType.setCollection(true);
+          types.add(conjType);
+          buildReferences(conjType);
+          types.add(compType);
+          buildReferences(compType);
         } else {
-
+          TypeDefinition compType = new TypeDefinition(compObj, dataModel);
+          compType.setCollection(true);
+          types.add(compType);
+          buildReferences(compType);
         }
       }
     }
@@ -217,5 +259,43 @@ public class FlowDefinition {
 
   public TypeDefinition[] getTypes() {
     return types.toArray(new TypeDefinition[0]);
+  }
+
+  private void buildReferences(TypeDefinition current) {
+    ObjectDefinition currObj = current.getDefinition();
+    currObj = dataModel.findObjectByName(currObj.getName());
+    if (types.size() > 1) {
+      // 建立关联关系
+      for (int i = 0; i < types.size() - 1; i++) {
+        TypeDefinition prevType = types.get(i);
+        ObjectDefinition prevObj = prevType.getDefinition();
+        prevObj = dataModel.findObjectByName(prevObj.getName());
+        AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
+        if (refAttrs.length > 0) {
+          JoinPredicateDefinition joinPredicate = new JoinPredicateDefinition();
+          joinPredicate.setLeftAttribute(prevObj.getIdentifiableAttribute());
+          joinPredicate.setLeftObject(prevObj);
+          joinPredicate.setRightAttribute(refAttrs[0]);
+          joinPredicate.setRightObject(currObj);
+          JoinConditionDefinition joinCondition = new JoinConditionDefinition(joinPredicate);
+          current.setReference(joinCondition);
+        } else {
+          refAttrs = prevObj.getCustomAttributes(currObj);
+          for (AttributeDefinition refAttr : refAttrs) {
+            if (Strings.isEmpty(current.getVariable()) ||
+                refAttr.getName().equals(current.getVariable())) {
+              JoinPredicateDefinition joinPredicate = new JoinPredicateDefinition();
+              joinPredicate.setLeftAttribute(refAttr);
+              joinPredicate.setLeftObject(prevObj);
+              joinPredicate.setRightAttribute(currObj.getIdentifiableAttribute());
+              joinPredicate.setRightObject(currObj);
+              JoinConditionDefinition joinCondition = new JoinConditionDefinition(joinPredicate);
+              current.setReference(joinCondition);
+              break;
+            }
+          }
+        }
+      }
+    }
   }
 }

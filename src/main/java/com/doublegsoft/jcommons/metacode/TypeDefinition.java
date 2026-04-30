@@ -6,6 +6,7 @@ import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.CollectionType;
 import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metamodel.dataset.CompositeRowDefinition;
+import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 import com.doublegsoft.jcommons.metamodel.root.AggregateRootDefinition;
 
 import java.util.*;
@@ -14,11 +15,20 @@ public class TypeDefinition {
 
   private final ModelDefinition dataModel;
 
+  private String variable;
+
+  /**
+   * 虚拟的，不一定是真正的data object。
+   */
   private final Object definition;
 
   private final List<FieldDefinition> fields = new ArrayList<>();
 
   private final List<MethodDefinition> methods = new ArrayList<>();
+
+  private JoinConditionDefinition reference;
+
+  private boolean collection;
 
   public TypeDefinition(Object definition, ModelDefinition dataModel) {
     if (!(definition instanceof ObjectDefinition) &&
@@ -194,41 +204,6 @@ public class TypeDefinition {
     return false;
   }
 
-  /**
-   * 获取当前定义对应的“根数据对象”（Root Data Object）。
-   * <p>
-   * 逻辑说明：
-   * 1. 仅当 definition 是 ObjectDefinition 时才进行处理；
-   * 2. 遍历该对象下的所有属性（AttributeDefinition）；
-   * 3. 查找带有 "persistence" 标签的属性：
-   *    - 一般表示该属性与持久化层（数据库）相关；
-   * 4. 一旦找到这样的属性，则返回其所属的父对象（即当前对象本身，作为根数据对象）。
-   * <p>
-   * 设计意图：
-   * - 用于识别一个模型是否绑定了持久化定义；
-   * - 若存在 persistence 标记，则认为该对象是“可落库的根对象”；
-   * <p>
-   * 返回值：
-   * - 若找到带有 "persistence" 标签的属性，则返回其父 ObjectDefinition；
-   * - 否则返回 null，表示当前定义不是持久化根对象。
-   * <p>
-   * 注意：
-   * - 当前实现只要存在任意一个带 "persistence" 标签的属性即认为是 root，
-   *   未校验是否为主键或主表标识；
-   * - 若未来需要更严格语义（如判断主键、主表等），建议扩展该逻辑。
-   */
-  public ObjectDefinition getRootDataObject() {
-    if (definition instanceof ObjectDefinition) {
-      ObjectDefinition obj = (ObjectDefinition) definition;
-      for (AttributeDefinition attr : obj.getAttributes()) {
-        if (attr.isLabelled("persistence")) {
-          return attr.getParent();
-        }
-      }
-    }
-    return null;
-  }
-
   public FlowDefinition getDataObjects() {
     FlowDefinition retVal = new FlowDefinition(this, dataModel);
     return retVal;
@@ -242,12 +217,43 @@ public class TypeDefinition {
     fields.add(field);
   }
 
+  public String getVariable() {
+    return variable;
+  }
+
+  public void setVariable(String variable) {
+    this.variable = variable;
+  }
 
   @SuppressWarnings("unchecked")
   public <T> T getDefinition() {
     return (T) definition;
   }
 
+  public JoinConditionDefinition getReference() {
+    return reference;
+  }
+
+  public void setReference(JoinConditionDefinition reference) {
+    this.reference = reference;
+  }
+
+  public FieldDefinition findField(Object definition) {
+    for (FieldDefinition field : fields) {
+      if (field.getDefinition().equals(definition)) {
+        return field;
+      }
+    }
+    return null;
+  }
+
+  public boolean isCollection() {
+    return collection;
+  }
+
+  public void setCollection(boolean collection) {
+    this.collection = collection;
+  }
 
   private void generateFields() {
     Set<String> existingFieldNames = new HashSet<>();
