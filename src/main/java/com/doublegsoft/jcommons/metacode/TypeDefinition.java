@@ -7,8 +7,12 @@ import com.doublegsoft.jcommons.metabean.type.CollectionType;
 import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metamodel.dataset.CompositeRowDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
+import com.doublegsoft.jcommons.metamodel.dataset.QualifiedAttributeDefinition;
+import com.doublegsoft.jcommons.metamodel.dataset.QualifiedObjectDefinition;
 import com.doublegsoft.jcommons.metamodel.root.AggregateRootDefinition;
+import com.doublegsoft.jcommons.utils.Strings;
 
+import javax.lang.model.type.UnknownTypeException;
 import java.util.*;
 
 public class TypeDefinition {
@@ -204,6 +208,15 @@ public class TypeDefinition {
     return false;
   }
 
+  public AttributeDefinition[] getIdentifiableAttributes() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      ObjectDefinition dataObj = dataModel.findObjectByName(obj.getName());
+      return dataObj.getIdentifiableAttributes();
+    }
+    return new AttributeDefinition[0];
+  }
+
   public FlowDefinition getDataObjects() {
     FlowDefinition retVal = new FlowDefinition(this, dataModel);
     return retVal;
@@ -238,6 +251,20 @@ public class TypeDefinition {
     this.reference = reference;
   }
 
+  public AttributeDefinition getLeftAttributeFromReference() {
+    if (reference == null) {
+      return null;
+    }
+    return reference.getJoinPredicates().get(0).getLeftAttribute();
+  }
+
+  public AttributeDefinition getRightAttributeFromReference() {
+    if (reference == null) {
+      return null;
+    }
+    return reference.getJoinPredicates().get(0).getRightAttribute();
+  }
+
   public FieldDefinition findField(Object definition) {
     for (FieldDefinition field : fields) {
       if (field.getDefinition().equals(definition)) {
@@ -253,6 +280,43 @@ public class TypeDefinition {
 
   public void setCollection(boolean collection) {
     this.collection = collection;
+  }
+
+  public FlowDefinition getFlow() {
+    return new FlowDefinition(this, dataModel);
+  }
+
+  public String getLabel() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      if (obj.isLabelled("name")) {
+        return obj.getLabelledOption("name", "label");
+      }
+    } else if (definition instanceof CompositeRowDefinition) {
+      CompositeRowDefinition row = (CompositeRowDefinition) definition;
+      QualifiedObjectDefinition qualObj = row.getQualifiedObjects().get(0);
+      return qualObj.getObject().getLabelledOption("name", "label");
+    } else if (definition instanceof AggregateRootDefinition) {
+      AggregateRootDefinition root = (AggregateRootDefinition) definition;
+      root.getRoot().getLabelledOption("name", "label");
+    }
+    throw new RuntimeException("unknown definition type: \"" + definition.getClass() + "\"");
+  }
+
+  public String getName() {
+
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      return obj.getName();
+    } else if (definition instanceof CompositeRowDefinition) {
+      CompositeRowDefinition row = (CompositeRowDefinition) definition;
+      QualifiedObjectDefinition qualObj = row.getQualifiedObjects().get(0);
+      return qualObj.getObject().getName();
+    } else if (definition instanceof AggregateRootDefinition) {
+      AggregateRootDefinition root = (AggregateRootDefinition) definition;
+      root.getRoot().getName();
+    }
+    throw new RuntimeException("unknown definition type: \"" + definition.getClass() + "\"");
   }
 
   private void generateFields() {
