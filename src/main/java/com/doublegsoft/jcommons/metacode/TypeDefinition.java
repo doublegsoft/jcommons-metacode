@@ -4,15 +4,11 @@ import com.doublegsoft.jcommons.metabean.AttributeDefinition;
 import com.doublegsoft.jcommons.metabean.ModelDefinition;
 import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.CollectionType;
-import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metamodel.dataset.CompositeRowDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
-import com.doublegsoft.jcommons.metamodel.dataset.QualifiedAttributeDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.QualifiedObjectDefinition;
 import com.doublegsoft.jcommons.metamodel.root.AggregateRootDefinition;
-import com.doublegsoft.jcommons.utils.Strings;
 
-import javax.lang.model.type.UnknownTypeException;
 import java.util.*;
 
 public class TypeDefinition {
