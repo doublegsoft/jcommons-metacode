@@ -205,10 +205,11 @@ public class FlowDefinition {
           // 注意：用属性名称作为key
           existingTypes.put(attr.getName(), refType);
           types.add(refType);
-          if (obj.getCustomAttributes(refObj).length > 1) {
-            // 这个逻辑是说明当引用了同一个对象多次，需要把属性名称作为别名
-            refType.setVariable(attr.getName());
-          }
+          refType.setVariable(attr.getName());
+//          if (obj.getCustomAttributes(refObj).length > 1) {
+//            // 这个逻辑是说明当引用了同一个对象多次，需要把属性名称作为别名
+//            refType.setVariable(attr.getName());
+//          }
           buildReferences(refType);
         }
         FieldDefinition field = new FieldDefinition(attr);
