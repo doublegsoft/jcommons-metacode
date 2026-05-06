@@ -28,6 +28,12 @@ public class TypeDefinition {
 
   private JoinConditionDefinition reference;
 
+  // 是否是属性的直接引用
+  private boolean attributeReference;
+
+  // 是否是间接间接引用，用两个字段的引用
+  private boolean implicitReference;
+
   private boolean collection;
 
   public TypeDefinition(Object definition, ModelDefinition dataModel) {
@@ -202,6 +208,14 @@ public class TypeDefinition {
 
   public boolean isExtension() {
     return false;
+  }
+
+  public boolean isAttributeReference() {
+    return attributeReference;
+  }
+
+  public void setAttributeReference(boolean attributeReference) {
+    this.attributeReference = attributeReference;
   }
 
   public AttributeDefinition[] getIdentifiableAttributes() {

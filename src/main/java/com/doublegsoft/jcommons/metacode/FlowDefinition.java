@@ -197,19 +197,22 @@ public class FlowDefinition {
           types.add(type);
           buildReferences(type);
         }
-        FieldDefinition field = new FieldDefinition(attr);
-        type.addField(field);
         if (attr.getType().isCustom()) {
           ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
-          type = new TypeDefinition(new ObjectDefinition(
+          TypeDefinition refType = new TypeDefinition(new ObjectDefinition(
               attr.getType().getName(), dummyModel), dataModel);
-          existingTypes.put(attr.getParent().getName(), type);
-          types.add(type);
+          refType.setAttributeReference(true);
+          // 注意：用属性名称作为key
+          existingTypes.put(attr.getName(), refType);
+          types.add(refType);
           if (obj.getCustomAttributes(refObj).length > 1) {
-            type.setVariable(attr.getName());
+            // 这个逻辑是说明当引用了同一个对象多次，需要把属性名称作为别名
+            refType.setVariable(attr.getName());
           }
-          buildReferences(type);
+          buildReferences(refType);
         }
+        FieldDefinition field = new FieldDefinition(attr);
+        type.addField(field);
       } else if (attr.isLabelled("original")) {
         // 合成对象、聚合对象
         String origObjName = attr.getLabelledOption("original", "object");
@@ -255,10 +258,6 @@ public class FlowDefinition {
         }
       }
     }
-  }
-
-  private void buildForObject(ObjectDefinition obj) {
-
   }
 
   public TypeDefinition[] getTypes() {
