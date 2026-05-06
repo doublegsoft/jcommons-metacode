@@ -197,6 +197,8 @@ public class FlowDefinition {
           types.add(type);
           buildReferences(type);
         }
+        FieldDefinition field = new FieldDefinition(attr);
+        type.addField(field);
         if (attr.getType().isCustom()) {
           ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
           type = new TypeDefinition(new ObjectDefinition(
@@ -208,8 +210,6 @@ public class FlowDefinition {
           }
           buildReferences(type);
         }
-        FieldDefinition field = new FieldDefinition(attr);
-        type.addField(field);
       } else if (attr.isLabelled("original")) {
         // 合成对象、聚合对象
         String origObjName = attr.getLabelledOption("original", "object");
@@ -255,6 +255,10 @@ public class FlowDefinition {
         }
       }
     }
+  }
+
+  private void buildForObject(ObjectDefinition obj) {
+
   }
 
   public TypeDefinition[] getTypes() {
