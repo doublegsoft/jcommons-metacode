@@ -275,9 +275,18 @@ public class TypeDefinition {
     return reference.getJoinPredicates().get(0).getRightAttribute();
   }
 
-  public FieldDefinition findField(Object definition) {
+  public FieldDefinition getFieldByDefinition(Object definition) {
     for (FieldDefinition field : fields) {
       if (field.getDefinition().equals(definition)) {
+        return field;
+      }
+    }
+    return null;
+  }
+
+  public FieldDefinition getFieldByName(String name) {
+    for (FieldDefinition field : fields) {
+      if (field.getName().equals(name)) {
         return field;
       }
     }
@@ -290,6 +299,18 @@ public class TypeDefinition {
 
   public void setCollection(boolean collection) {
     this.collection = collection;
+  }
+
+  public boolean isAggregateRoot() {
+    return definition instanceof AggregateRootDefinition;
+  }
+
+  public boolean isCompositeRow() {
+    return definition instanceof CompositeRowDefinition;
+  }
+
+  public boolean isDataObject() {
+    return definition instanceof ObjectDefinition;
   }
 
   public FlowDefinition getFlow() {
@@ -314,7 +335,6 @@ public class TypeDefinition {
   }
 
   public String getName() {
-
     if (definition instanceof ObjectDefinition) {
       ObjectDefinition obj = (ObjectDefinition) definition;
       return obj.getName();
