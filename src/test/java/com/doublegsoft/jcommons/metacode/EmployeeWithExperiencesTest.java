@@ -33,7 +33,7 @@ public class EmployeeWithExperiencesTest extends TestBase {
     createAttributeWithPrimitiveType(experience, "end_date", new PrimitiveType("datetime"));
     createAttributeWithPrimitiveType(experience, "work", new PrimitiveType("string"));
 
-    createAttributeWithCollectionType(employee, "experiences", experience);
+    createAttributeWithCollectionType(employee, "experiences", "experience", experience);
     return retVal;
   }
 

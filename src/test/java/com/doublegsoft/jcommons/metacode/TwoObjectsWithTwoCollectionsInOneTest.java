@@ -61,8 +61,8 @@ public class TwoObjectsWithTwoCollectionsInOneTest extends TestBase {
     attr.setLabelledOption("original", "object", "employee");
     attr.setLabelledOption("original", "attribute", "hire_date");
 
-    createAttributeWithCollectionType(personAndEmployee, "work_experiences", work_experience);
-    createAttributeWithCollectionType(personAndEmployee, "education_experiences", education_experience);
+    createAttributeWithCollectionType(personAndEmployee, "work_experiences", "work_experience", work_experience);
+    createAttributeWithCollectionType(personAndEmployee, "education_experiences", "education_experience", education_experience);
 
     return retVal;
   }

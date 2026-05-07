@@ -57,9 +57,11 @@ public class TestBase {
 
   protected void createAttributeWithCollectionType(ObjectDefinition parent,
                                                    String attrname,
+                                                   String singular,
                                                    ObjectDefinition obj) {
     AttributeDefinition retVal = new AttributeDefinition(attrname, parent);
     retVal.setLabelledOption("name", "label", attrname);
+    retVal.setLabelledOption("name", "singular", singular);
     CollectionType collType = new CollectionType(obj.getName());
     collType.setComponentType(obj);
     retVal.setType(collType);

@@ -187,16 +187,16 @@ public class FlowDefinition {
     Set<AttributeDefinition> existingOrigAttrs = new HashSet<>();
     for (AttributeDefinition attr : obj.getAttributes()) {
       TypeDefinition type = null;
+      type = existingTypes.get(attr.getParent().getName());
+      if (type == null) {
+        type = new TypeDefinition(new ObjectDefinition(
+            attr.getParent().getName(), dummyModel), dataModel);
+        existingTypes.put(attr.getParent().getName(), type);
+        types.add(type);
+        buildReferences(type);
+      }
       if (attr.isLabelled("persistence")) {
         // 数据对象
-        type = existingTypes.get(attr.getParent().getName());
-        if (type == null) {
-          type = new TypeDefinition(new ObjectDefinition(
-              attr.getParent().getName(), dummyModel), dataModel);
-          existingTypes.put(attr.getParent().getName(), type);
-          types.add(type);
-          buildReferences(type);
-        }
         if (attr.getType().isCustom()) {
           TypeDefinition refType = new TypeDefinition(new ObjectDefinition(
               attr.getType().getName(), dummyModel), dataModel);
@@ -251,13 +251,29 @@ public class FlowDefinition {
           compType.setCollection(true);
           types.add(compType);
           buildReferences(compType);
+          FieldDefinition field = new FieldDefinition(attr);
+          type.addField(field);
         }
       }
     }
   }
 
   public TypeDefinition[] getTypes() {
-    return types.toArray(new TypeDefinition[0]);
+    return getTypes(true);
+  }
+
+  public TypeDefinition[] getTypes(boolean persistent) {
+    List<TypeDefinition> retVal = new ArrayList<>();
+    for (TypeDefinition type : types) {
+      if (persistent) {
+        if (type.isPersistence()) {
+          retVal.add(type);
+        }
+      } else {
+        retVal.add(type);
+      }
+    }
+    return retVal.toArray(new TypeDefinition[0]);
   }
 
   private void buildReferences(TypeDefinition current) {

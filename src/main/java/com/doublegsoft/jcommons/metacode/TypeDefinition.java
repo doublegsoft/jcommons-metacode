@@ -188,7 +188,7 @@ public class TypeDefinition {
 
   public boolean isPersistence() {
     if (definition instanceof ObjectDefinition) {
-      ObjectDefinition obj = (ObjectDefinition) definition;
+      ObjectDefinition obj = dataModel.findObjectByName(getName());
       return obj.isLabelled("persistence");
     }
     return false;
@@ -311,6 +311,22 @@ public class TypeDefinition {
 
   public boolean isDataObject() {
     return definition instanceof ObjectDefinition;
+  }
+
+  public AttributeDefinition getIdentifiableAttribute() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition dataObj = dataModel.findObjectByName(getName());
+      return dataObj.getIdentifiableAttribute();
+    }
+    return null;
+  }
+
+  public AttributeDefinition getAttribute(String name) {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition dataObj = dataModel.findObjectByName(getName());
+      return dataObj.getAttribute(name);
+    }
+    return null;
   }
 
   public FlowDefinition getFlow() {

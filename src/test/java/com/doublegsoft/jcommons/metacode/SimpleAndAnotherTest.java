@@ -2,12 +2,11 @@ package com.doublegsoft.jcommons.metacode;
 
 import com.doublegsoft.jcommons.metabean.ModelDefinition;
 import com.doublegsoft.jcommons.metabean.ObjectDefinition;
-import com.doublegsoft.jcommons.metabean.type.CustomType;
 import com.doublegsoft.jcommons.metabean.type.PrimitiveType;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SimpleWithAnotherTest extends TestBase {
+public class SimpleAndAnotherTest extends TestBase {
 
   private ModelDefinition buildDataModel() {
     ModelDefinition retVal = new ModelDefinition();
@@ -29,8 +28,8 @@ public class SimpleWithAnotherTest extends TestBase {
   @Test
   public void test() throws Exception {
     ModelDefinition dataModel = buildDataModel();
-    ObjectDefinition employee = dataModel.findObjectByName("another");
-    TypeDefinition type = new TypeDefinition(employee, dataModel);
+    ObjectDefinition another = dataModel.findObjectByName("another");
+    TypeDefinition type = new TypeDefinition(another, dataModel);
 
     FlowDefinition flow = new FlowDefinition(type, dataModel);
     Assert.assertEquals("在这个流程中应该有两个类型对象", 3, flow.getTypes().length);
