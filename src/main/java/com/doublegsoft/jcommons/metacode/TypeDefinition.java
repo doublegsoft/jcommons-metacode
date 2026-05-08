@@ -126,24 +126,6 @@ public class TypeDefinition {
     return retVal;
   }
 
-  public List<FieldDefinition> getIdentifiableFields() {
-    List<FieldDefinition> retVal = new ArrayList<>();
-    for (FieldDefinition field : fields) {
-      if (field.isIdentifiable()) {
-        retVal.add(field);
-      }
-    }
-    return retVal;
-  }
-
-  public FieldDefinition getIdentifiableField() {
-    List<FieldDefinition> retVal = getIdentifiableFields();
-    if (retVal.isEmpty()) {
-      return null;
-    }
-    return retVal.get(0);
-  }
-
   public Set<ObjectDefinition> getReferencingCustomTypes() {
     Set<ObjectDefinition> retVal = new HashSet<>();
     for (FieldDefinition field : fields) {
