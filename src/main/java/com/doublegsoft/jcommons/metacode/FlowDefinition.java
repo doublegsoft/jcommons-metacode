@@ -105,6 +105,9 @@ public class FlowDefinition {
     }
     String masterObjName = obj.getLabelledOption("meta", "master");
     String detailObjName = obj.getLabelledOption("meta", "detail");
+    if (masterObjName == null) {
+      masterObjName = obj.getName().substring(0, obj.getName().length() - 1);
+    }
     if (detailObjName == null) {
       detailObjName = masterObjName + "_meta";
     }
@@ -131,30 +134,31 @@ public class FlowDefinition {
     if (detailRefAttrs.length == 0) {
       throw new DefinitionException("\"" + detailObjName + "\"没有属性引用到\"" + masterObjName + "\"定义！");
     }
+    if (keyAttr == null) {
+      throw new DefinitionException("\"在meta对象没有找到作为key的字段！");
+    }
+    if (valAttr == null) {
+      throw new DefinitionException("\"在meta对象没有找到作为value的字段！");
+    }
+
+    for (FieldDefinition rootField : root.getFields()) {
+      boolean existing = false;
+      for (FieldDefinition masterField : masterType.getFields()) {
+        if (masterField.getName().equals(rootField.getName())) {
+          existing = true;
+          break;
+        }
+      }
+      if (!existing) {
+        masterType.addField(rootField);
+      }
+    }
 
     for (AttributeDefinition attr : obj.getAttributes()) {
       if (attr.isLabelled("persistence") || attr.isLabelled("original")) {
         continue;
       }
       TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
-      for (AttributeDefinition refAttr : detailRefAttrs) {
-        FieldDefinition refAttrField = new FieldDefinition(refAttr);
-        ValueDefinition value = new ValueDefinition();
-        value.setAttributeValue(masterIdAttrs[0]);
-        refAttrField.setValue(value);
-        detailType.addField(refAttrField);
-      }
-      FieldDefinition keyAttrField = new FieldDefinition(keyAttr);
-      ValueDefinition keyAttrValue = new ValueDefinition();
-      keyAttrValue.setString(attr.getName());
-      keyAttrField.setValue(keyAttrValue);
-      detailType.addField(keyAttrField);
-
-      FieldDefinition valAttrField = new FieldDefinition(valAttr);
-      ValueDefinition valAttrValue = new ValueDefinition();
-      keyAttrValue.setAttributeValue(attr);
-      keyAttrField.setValue(valAttrValue);
-      detailType.addField(valAttrField);
       types.add(detailType);
     }
   }

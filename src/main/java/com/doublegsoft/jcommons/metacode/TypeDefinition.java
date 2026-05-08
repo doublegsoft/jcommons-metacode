@@ -194,11 +194,27 @@ public class TypeDefinition {
     return false;
   }
 
+  public boolean isComposite() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      return obj.isLabelled("composite");
+    }
+    return false;
+  }
+
   public boolean isAggregate() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      return obj.isLabelled("aggregate");
+    }
     return false;
   }
 
   public boolean isPivot() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      return obj.isLabelled("pivot");
+    }
     return false;
   }
 
@@ -211,6 +227,10 @@ public class TypeDefinition {
   }
 
   public boolean isExtension() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      return obj.isLabelled("extension");
+    }
     return false;
   }
 
@@ -384,6 +404,9 @@ public class TypeDefinition {
       }
       if (obj.isLabelled("meta")) {
         String masterObjName = obj.getLabelledOption("meta", "master");
+        if (masterObjName == null) {
+          masterObjName = obj.getName().substring(0, obj.getName().length() - 1);
+        }
         ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
         addFields(masterObj, existingFieldNames);
       }
