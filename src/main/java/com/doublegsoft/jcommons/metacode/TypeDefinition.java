@@ -203,6 +203,10 @@ public class TypeDefinition {
   }
 
   public boolean isMeta() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      return obj.isLabelled("meta");
+    }
     return false;
   }
 
