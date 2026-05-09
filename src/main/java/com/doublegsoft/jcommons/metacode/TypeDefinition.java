@@ -393,7 +393,7 @@ public class TypeDefinition {
         addFields(masterObj, existingFieldNames);
       }
       if (obj.isLabelled("extension")) {
-        String extensionObjName = obj.getLabelledOption("extension", "object");
+        String extensionObjName = obj.getLabelledOption("extension", "master");
         ObjectDefinition extensionObj = dataModel.findObjectByName(extensionObjName);
         addFields(extensionObj, existingFieldNames);
       }

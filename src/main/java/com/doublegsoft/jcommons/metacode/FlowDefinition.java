@@ -190,13 +190,18 @@ public class FlowDefinition {
     }
     String masterObjName = obj.getLabelledOption("extension", "master");
     ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
-    String objectsExpr = obj.getLabelledOption("extension", "objects");
-    String[] objRefExprs = objectsExpr.split(";");
-    for (String objRefExpr : objRefExprs) {
-      String objName = objRefExpr.substring(0, objRefExpr.indexOf("("));
-      String attrName = objRefExpr.substring(objRefExpr.indexOf("(") + 1, objRefExpr.indexOf(")"));
-      ObjectDefinition extensionObj = dataModel.findObjectByName(objName);
-      AttributeDefinition extensionObjAttr = extensionObj.getAttribute(attrName);
+    String detailsExpr = obj.getLabelledOption("extension", "details");
+    if (detailsExpr != null) {
+      String[] objRefExprs = detailsExpr.split(";");
+      for (String objRefExpr : objRefExprs) {
+        if (Strings.isEmpty(objRefExpr)) {
+          continue;
+        }
+        String objName = objRefExpr.substring(0, objRefExpr.indexOf("("));
+        String attrName = objRefExpr.substring(objRefExpr.indexOf("(") + 1, objRefExpr.indexOf(")"));
+        ObjectDefinition extensionObj = dataModel.findObjectByName(objName);
+        AttributeDefinition extensionObjAttr = extensionObj.getAttribute(attrName);
+      }
     }
   }
 

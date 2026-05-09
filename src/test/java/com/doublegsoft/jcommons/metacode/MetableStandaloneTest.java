@@ -28,7 +28,7 @@ public class MetableStandaloneTest extends TestBase {
     createIdentifiableAttribute(metableMeta, "property_name", new PrimitiveType("string"));
     createAttributeWithPrimitiveType(metableMeta, "property_value", new PrimitiveType("string"));
 
-    ObjectDefinition metableEx = createPersistentObject(retVal, "metable_full");
+    ObjectDefinition metableEx = new ObjectDefinition("metable_full", retVal);
     createAttribute(metableEx, "prop_a", new PrimitiveType("string"));
     createAttribute(metableEx, "prop_b", new PrimitiveType("string"));
     createAttribute(metableEx, "prop_c", new PrimitiveType("string"));

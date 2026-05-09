@@ -28,7 +28,7 @@ public class MetableUnderlineTest extends TestBase {
     createIdentifiableAttribute(metableMeta, "property_name", new PrimitiveType("string"));
     createAttributeWithPrimitiveType(metableMeta, "property_value", new PrimitiveType("string"));
 
-    ObjectDefinition metableEx = createPersistentObject(retVal, "metable_");
+    ObjectDefinition metableEx = new ObjectDefinition("metable_", retVal);
     createAttribute(metableEx, "prop_a", new PrimitiveType("string"));
     createAttribute(metableEx, "prop_b", new PrimitiveType("string"));
     createAttribute(metableEx, "prop_c", new PrimitiveType("string"));
