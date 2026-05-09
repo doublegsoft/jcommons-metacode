@@ -42,6 +42,6 @@ public class ChineseProductTest extends TestBase {
     TypeDefinition type = new TypeDefinition(employee, dataModel);
 
     FlowDefinition flow = new FlowDefinition(type, dataModel);
-    Assert.assertEquals("在这个流程中应该有六个类型对象", 4, flow.getTypes().length);
+    Assert.assertEquals("在这个流程中应该有六个类型对象", 2, flow.getTypes().length);
   }
 }

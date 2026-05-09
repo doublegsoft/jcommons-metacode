@@ -127,6 +127,7 @@ public class FlowDefinition {
     AttributeDefinition[] detailRefAttrs = detailObj.getCustomAttributes(masterObj);
     TypeDefinition masterType = new TypeDefinition(masterObj, dataModel);
     types.add(masterType);
+    buildReferences(masterType);
 
     if (masterIdAttrs.length == 0) {
       throw new DefinitionException("\"" + detailObjName + "\"没有标识属性定义！");
@@ -154,13 +155,22 @@ public class FlowDefinition {
       }
     }
 
-    for (AttributeDefinition attr : obj.getAttributes()) {
-      if (attr.isLabelled("persistence") || attr.isLabelled("original")) {
-        continue;
+    for (FieldDefinition field : masterType.getFields()) {
+      if (field.getDefinition() instanceof AttributeDefinition) {
+        AttributeDefinition attr = (AttributeDefinition) field.getDefinition();
+        if (attr.getType().isCustom()) {
+          ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
+          TypeDefinition refType = new TypeDefinition(refObj, dataModel);
+          types.add(refType);
+          buildReferences(refType);
+        }
       }
-      TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
-      types.add(detailType);
     }
+
+    TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
+    detailType.setCollection(true);
+    types.add(detailType);
+    buildReferences(detailType);
   }
 
   private void buildForExtension() {
