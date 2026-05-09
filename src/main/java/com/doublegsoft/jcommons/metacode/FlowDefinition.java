@@ -71,31 +71,41 @@ public class FlowDefinition {
     if (detailRefAttrs.length == 0) {
       throw new DefinitionException("\"" + detailObjName + "\"没有属性引用到\"" + masterObjName + "\"定义！");
     }
-    for (AttributeDefinition attr : obj.getAttributes()) {
-      if (attr.isLabelled("persistence") || attr.isLabelled("original")) {
-        continue;
-      }
-      TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
-      for (AttributeDefinition refAttr : detailRefAttrs) {
-        FieldDefinition refAttrField = new FieldDefinition(refAttr);
-        ValueDefinition value = new ValueDefinition();
-        value.setAttributeValue(masterIdAttrs[0]);
-        refAttrField.setValue(value);
-        detailType.addField(refAttrField);
-      }
-      FieldDefinition keyAttrField = new FieldDefinition(keyAttr);
-      ValueDefinition keyAttrValue = new ValueDefinition();
-      keyAttrValue.setString(attr.getName());
-      keyAttrField.setValue(keyAttrValue);
-      detailType.addField(keyAttrField);
-
-      FieldDefinition valAttrField = new FieldDefinition(valAttr);
-      ValueDefinition valAttrValue = new ValueDefinition();
-      keyAttrValue.setAttributeValue(attr);
-      keyAttrField.setValue(valAttrValue);
-      detailType.addField(valAttrField);
-      types.add(detailType);
+    if (keyAttr == null) {
+      throw new DefinitionException("\"在meta对象没有找到作为key的字段！");
     }
+    if (valAttr == null) {
+      throw new DefinitionException("\"在meta对象没有找到作为value的字段！");
+    }
+    for (FieldDefinition rootField : root.getFields()) {
+      boolean existing = false;
+      for (FieldDefinition masterField : masterType.getFields()) {
+        if (masterField.getName().equals(rootField.getName())) {
+          existing = true;
+          break;
+        }
+      }
+      if (!existing) {
+        masterType.addField(rootField);
+      }
+    }
+
+    for (FieldDefinition field : masterType.getFields()) {
+      if (field.getDefinition() instanceof AttributeDefinition) {
+        AttributeDefinition attr = (AttributeDefinition) field.getDefinition();
+        if (attr.getType().isCustom()) {
+          ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
+          TypeDefinition refType = new TypeDefinition(refObj, dataModel);
+          types.add(refType);
+          buildReferences(refType);
+        }
+      }
+    }
+
+    TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
+    detailType.setCollection(true);
+    types.add(detailType);
+    buildReferences(detailType);
   }
 
   private void buildForMeta() {
