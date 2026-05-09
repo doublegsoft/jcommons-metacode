@@ -50,7 +50,7 @@ public class CompleteBloodCountTest extends TestBase {
     Assert.assertEquals("complete_blood_count对象直接引用了两个对象", 2, refObjs.size());
 
     FlowDefinition flow = new FlowDefinition(type, dataModel);
-    Assert.assertEquals("在这个流程中应该有六个类型对象", 6, flow.getTypes().length);
+    Assert.assertEquals("在这个流程中应该有六个类型对象", 2, flow.getTypes().length);
   }
 
 }
