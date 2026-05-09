@@ -8,6 +8,7 @@ import com.doublegsoft.jcommons.metamodel.dataset.CompositeRowDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.QualifiedObjectDefinition;
 import com.doublegsoft.jcommons.metamodel.root.AggregateRootDefinition;
+import com.doublegsoft.jcommons.utils.Inflector;
 
 import java.util.*;
 
@@ -323,6 +324,18 @@ public class TypeDefinition {
     if (definition instanceof ObjectDefinition) {
       ObjectDefinition dataObj = dataModel.findObjectByName(getName());
       return dataObj.getIdentifiableAttribute();
+    }
+    return null;
+  }
+
+  public String getPlural() {
+    if (definition instanceof ObjectDefinition) {
+      ObjectDefinition obj = (ObjectDefinition) definition;
+      ObjectDefinition dataObj = dataModel.findObjectByName(obj.getName());
+      if (dataObj.getLabelledOption("name", "plural") != null) {
+        return dataObj.getLabelledOption("name", "plural");
+      }
+      return Inflector.getInstance().pluralize(dataObj.getName());
     }
     return null;
   }
