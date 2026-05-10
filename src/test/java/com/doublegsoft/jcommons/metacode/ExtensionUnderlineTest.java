@@ -10,6 +10,7 @@ import com.doublegsoft.jcommons.metamodel.dataset.JoinPredicateDefinition;
 import org.junit.Assert;
 import org.junit.Test;
 
+@Deprecated
 public class ExtensionUnderlineTest extends TestBase {
 
   private ModelDefinition buildDataModel() {

@@ -27,6 +27,10 @@ public class FlowDefinition {
     build();
   }
 
+  public TypeDefinition getRoot() {
+    return root;
+  }
+
   public void addObjectIntoFlow(ObjectDefinition obj) {
     TypeDefinition type = new TypeDefinition(obj, dataModel);
     types.add(type);
@@ -40,10 +44,27 @@ public class FlowDefinition {
 
   private void build() {
     if (root.getDefinition() instanceof ObjectDefinition) {
-      buildForPivot();
-      buildForMeta();
-      buildForExtension();
-      buildForObject();
+      ObjectDefinition obj = root.getDefinition();
+      ObjectDefinition dataObj = dataModel.findObjectByName(obj.getName());
+      boolean isAggregateLike = true;
+      for (AttributeDefinition attr : dataObj.getAttributes()) {
+        if (!attr.getType().isCustom() && !attr.getType().isCollection()) {
+          isAggregateLike = false;
+          break;
+        }
+      }
+      if (dataObj.isLabelled("pivot")) {
+        buildForPivot();
+      } else if (dataObj.isLabelled("meta")) {
+        buildForMeta();
+      } else if (dataObj.isLabelled("extension")) {
+        buildForExtension();
+      } else if (isAggregateLike) {
+        buildForAggregate();
+      } else {
+        // composite or plain
+        buildForObject();
+      }
     }
   }
 
@@ -205,13 +226,19 @@ public class FlowDefinition {
     }
   }
 
+  private void buildForAggregate() {
+    ObjectDefinition obj = root.getDefinition();
+    ObjectDefinition dataObj = dataModel.findObjectByName(obj.getName());
+    for (AttributeDefinition attr : dataObj.getAttributes()) {
+      ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
+      TypeDefinition refType = new TypeDefinition(refObj, dataModel);
+      types.add(refType);
+      buildReferences(refType, attr);
+    }
+  }
+
   private void buildForObject() {
     ObjectDefinition obj = root.getDefinition();
-    if (obj.isLabelled("pivot") ||
-        obj.isLabelled("meta") ||
-        obj.isLabelled("extension")) {
-      return;
-    }
     Map<String, TypeDefinition> existingTypes = new HashMap<>();
     Set<AttributeDefinition> existingOrigAttrs = new HashSet<>();
     for (AttributeDefinition attr : obj.getAttributes()) {
@@ -283,6 +310,8 @@ public class FlowDefinition {
           FieldDefinition field = new FieldDefinition(attr);
           type.addField(field);
         }
+      } else if (attr.isLabelled("conjunction")) {
+        // TODO
       }
     }
   }
@@ -305,6 +334,24 @@ public class FlowDefinition {
     return retVal.toArray(new TypeDefinition[0]);
   }
 
+  private void buildReferences(TypeDefinition current, AttributeDefinition attrRef) {
+    if (attrRef == null || !attrRef.isLabelled("conjunction")) {
+      buildReferences(current);
+      return;
+    }
+    String sourceObjName = attrRef.getLabelledOption("conjunction", "source_object");
+    String sourceAttrName = attrRef.getLabelledOption("conjunction", "source_attribute");
+    String targetObjName = attrRef.getLabelledOption("conjunction", "target_object");
+    String targetAttrName = attrRef.getLabelledOption("conjunction", "target_attribute");
+
+    ObjectDefinition sourceObj = dataModel.findObjectByName(sourceObjName);
+    AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, sourceAttrName);
+    ObjectDefinition targetObj = dataModel.findObjectByName(targetObjName);
+    AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, targetAttrName);
+
+    current.setReference(createJoinCondition(sourceAttr, sourceObj, targetAttr, targetObj));
+  }
+
   private void buildReferences(TypeDefinition current) {
     ObjectDefinition currObj = current.getDefinition();
     currObj = dataModel.findObjectByName(currObj.getName());
@@ -316,30 +363,34 @@ public class FlowDefinition {
         prevObj = dataModel.findObjectByName(prevObj.getName());
         AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
         if (refAttrs.length > 0) {
-          JoinPredicateDefinition joinPredicate = new JoinPredicateDefinition();
-          joinPredicate.setLeftAttribute(prevObj.getIdentifiableAttribute());
-          joinPredicate.setLeftObject(prevObj);
-          joinPredicate.setRightAttribute(refAttrs[0]);
-          joinPredicate.setRightObject(currObj);
-          JoinConditionDefinition joinCondition = new JoinConditionDefinition(joinPredicate);
-          current.setReference(joinCondition);
+          // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
+          current.setReference(createJoinCondition(prevObj.getIdentifiableAttribute(), prevObj,
+              refAttrs[0], currObj));
         } else {
+          // 反向引用
           refAttrs = prevObj.getCustomAttributes(currObj);
           for (AttributeDefinition refAttr : refAttrs) {
             if (Strings.isEmpty(current.getVariable()) ||
                 refAttr.getName().equals(current.getVariable())) {
-              JoinPredicateDefinition joinPredicate = new JoinPredicateDefinition();
-              joinPredicate.setLeftAttribute(refAttr);
-              joinPredicate.setLeftObject(prevObj);
-              joinPredicate.setRightAttribute(currObj.getIdentifiableAttribute());
-              joinPredicate.setRightObject(currObj);
-              JoinConditionDefinition joinCondition = new JoinConditionDefinition(joinPredicate);
-              current.setReference(joinCondition);
+              current.setReference(createJoinCondition(refAttr, prevObj,
+                  currObj.getIdentifiableAttribute(), currObj));
               break;
             }
           }
-        }
-      }
+        } // 正向、反向引用
+      } // for
     }
+  }
+
+  private JoinConditionDefinition createJoinCondition(AttributeDefinition leftAttr,
+                                                      ObjectDefinition leftObj,
+                                                      AttributeDefinition rightAttr,
+                                                      ObjectDefinition rightObj) {
+    JoinPredicateDefinition joinPredicate = new JoinPredicateDefinition();
+    joinPredicate.setLeftAttribute(leftAttr);
+    joinPredicate.setLeftObject(leftObj);
+    joinPredicate.setRightAttribute(rightAttr);
+    joinPredicate.setRightObject(rightObj);
+    return new JoinConditionDefinition(joinPredicate);
   }
 }
