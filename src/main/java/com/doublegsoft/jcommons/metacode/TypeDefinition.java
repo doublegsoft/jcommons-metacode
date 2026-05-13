@@ -404,8 +404,6 @@ public class TypeDefinition {
       thisObjName = thisObjName.substring(0, thisObjName.length() - 1);
     } else if (thisObj.isLabelled("meta")) {
       thisObjName = thisObj.getLabelledOption("meta", "master");
-    } else if (thisObj.isLabelled("pivot")) {
-      thisObjName = thisObj.getLabelledOption("pivot", "master");
     }
     // 属性引用
     if (thisObjName.equals(anotherObj.getName())) {
