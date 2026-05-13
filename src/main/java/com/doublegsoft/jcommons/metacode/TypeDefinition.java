@@ -403,7 +403,9 @@ public class TypeDefinition {
     if (thisObjName.endsWith("_")) {
       thisObjName = thisObjName.substring(0, thisObjName.length() - 1);
     } else if (thisObj.isLabelled("meta")) {
-      thisObjName = thisObj.getLabelledOption("meta", "master");
+      if (thisObj.getLabelledOption("meta", "master") != null) {
+        thisObjName = thisObj.getLabelledOption("meta", "master");
+      }
     } else if (thisObj.isLabelled("pivot")) {
       thisObjName = thisObj.getLabelledOption("pivot", "master");
     }
@@ -411,7 +413,12 @@ public class TypeDefinition {
     if (thisObjName.equals(anotherObj.getName())) {
       if (thisObj.getName().endsWith("_")) {
         return SELF_REF;
-      } else if (thisObj.isLabelled("meta") || thisObj.isLabelled("pivot")) {
+      } else if (thisObj.isLabelled("meta") && thisObj.getLabelledOption("meta", "master") != null) {
+        if (thisObj.getName().equals(thisObj.getLabelledOption("meta", "master"))) {
+          return SELF_REF;
+        }
+        return ATTRIBUTE_REF;
+      } else if (thisObj.isLabelled("pivot")) {
         return ATTRIBUTE_REF;
       }
       return SELF_REF;
