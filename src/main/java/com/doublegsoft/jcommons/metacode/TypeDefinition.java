@@ -14,6 +14,16 @@ import java.util.*;
 
 public class TypeDefinition {
 
+  public static final String NO_REF = "NREF";
+
+  public static final String PERSISTENCE_REF = "PREF";
+
+  public static final String ATTRIBUTE_REF = "AREF";
+
+  public static final String COLLECTION_REF = "CREF";
+
+  public static final String ORIGINAL_REF = "OREF";
+
   private final ModelDefinition dataModel;
 
   private String variable;
@@ -382,6 +392,34 @@ public class TypeDefinition {
       root.getRoot().getName();
     }
     throw new RuntimeException("unknown definition type: \"" + definition.getClass() + "\"");
+  }
+
+  public String getReferenceType(TypeDefinition another) {
+    ObjectDefinition thisObj = (ObjectDefinition) definition;
+    ObjectDefinition anotherObj = (ObjectDefinition) another.definition;
+    // 属性引用
+    for (AttributeDefinition attr : thisObj.getAttributes()) {
+      if (attr.getType().getName().equals(anotherObj.getName())) {
+        if (attr.isLabelled("persistence")) {
+          return PERSISTENCE_REF;
+        } else {
+          return ATTRIBUTE_REF;
+        }
+      }
+      if (attr.getType().isCollection()) {
+        CollectionType collType = (CollectionType) attr.getType();
+        if (collType.getComponentType().getName().equals(anotherObj.getName())) {
+          return COLLECTION_REF;
+        }
+      }
+      if (attr.isLabelled("original")) {
+        String origObjName = thisObj.getLabelledOption("original", "object");
+        if (origObjName.equals(anotherObj.getName())) {
+          return ORIGINAL_REF;
+        }
+      }
+    }
+    return NO_REF;
   }
 
   private void generateFields() {

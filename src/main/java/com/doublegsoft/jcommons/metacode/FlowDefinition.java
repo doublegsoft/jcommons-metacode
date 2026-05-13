@@ -83,6 +83,7 @@ public class FlowDefinition {
     AttributeDefinition valAttr = detailObj.getAttribute(valAttrName);
     AttributeDefinition[] masterIdAttrs = detailObj.getIdentifiableAttributes();
     AttributeDefinition[] detailRefAttrs = detailObj.getCustomAttributes(masterObj);
+
     TypeDefinition masterType = new TypeDefinition(masterObj, dataModel);
     types.add(masterType);
 
@@ -93,10 +94,10 @@ public class FlowDefinition {
       throw new DefinitionException("\"" + detailObjName + "\"没有属性引用到\"" + masterObjName + "\"定义！");
     }
     if (keyAttr == null) {
-      throw new DefinitionException("\"在meta对象没有找到作为key的字段！");
+      throw new DefinitionException("\"在pivot对象的定义中没有找到作为key的字段！");
     }
     if (valAttr == null) {
-      throw new DefinitionException("\"在meta对象没有找到作为value的字段！");
+      throw new DefinitionException("\"在pivot对象的定义中没有找到作为value的字段！");
     }
     for (FieldDefinition rootField : root.getFields()) {
       boolean existing = false;
@@ -167,10 +168,10 @@ public class FlowDefinition {
       throw new DefinitionException("\"" + detailObjName + "\"没有属性引用到\"" + masterObjName + "\"定义！");
     }
     if (keyAttr == null) {
-      throw new DefinitionException("\"在meta对象没有找到作为key的字段！");
+      throw new DefinitionException("\"在meta对象的定义中没有找到作为key的字段！");
     }
     if (valAttr == null) {
-      throw new DefinitionException("\"在meta对象没有找到作为value的字段！");
+      throw new DefinitionException("\"在meta对象的定义中没有找到作为value的字段！");
     }
 
     for (FieldDefinition rootField : root.getFields()) {
@@ -188,7 +189,7 @@ public class FlowDefinition {
 
     for (FieldDefinition field : masterType.getFields()) {
       if (field.getDefinition() instanceof AttributeDefinition) {
-        AttributeDefinition attr = (AttributeDefinition) field.getDefinition();
+        AttributeDefinition attr = field.getDefinition();
         if (attr.getType().isCustom()) {
           ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
           TypeDefinition refType = new TypeDefinition(refObj, dataModel);
@@ -355,30 +356,28 @@ public class FlowDefinition {
   private void buildReferences(TypeDefinition current) {
     ObjectDefinition currObj = current.getDefinition();
     currObj = dataModel.findObjectByName(currObj.getName());
-    if (types.size() > 1) {
-      // 建立关联关系
-      for (int i = 0; i < types.size() - 1; i++) {
-        TypeDefinition prevType = types.get(i);
-        ObjectDefinition prevObj = prevType.getDefinition();
-        prevObj = dataModel.findObjectByName(prevObj.getName());
-        AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
-        if (refAttrs.length > 0) {
-          // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
-          current.setReference(createJoinCondition(prevObj.getIdentifiableAttribute(), prevObj,
-              refAttrs[0], currObj));
-        } else {
-          // 反向引用
-          refAttrs = prevObj.getCustomAttributes(currObj);
-          for (AttributeDefinition refAttr : refAttrs) {
-            if (Strings.isEmpty(current.getVariable()) ||
-                refAttr.getName().equals(current.getVariable())) {
-              current.setReference(createJoinCondition(refAttr, prevObj,
-                  currObj.getIdentifiableAttribute(), currObj));
-              break;
-            }
+    // 建立关联关系
+    for (int i = 0; i < types.size() - 1; i++) {
+      TypeDefinition prevType = types.get(i);
+      ObjectDefinition prevObj = prevType.getDefinition();
+      prevObj = dataModel.findObjectByName(prevObj.getName());
+      AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
+      if (refAttrs.length > 0) {
+        // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
+        current.setReference(createJoinCondition(prevObj.getIdentifiableAttribute(), prevObj,
+            refAttrs[0], currObj));
+      } else {
+        // 反向引用
+        refAttrs = prevObj.getCustomAttributes(currObj);
+        for (AttributeDefinition refAttr : refAttrs) {
+          if (Strings.isEmpty(current.getVariable()) ||
+              refAttr.getName().equals(current.getVariable())) {
+            current.setReference(createJoinCondition(refAttr, prevObj,
+                currObj.getIdentifiableAttribute(), currObj));
+            break;
           }
-        } // 正向、反向引用
-      } // for
+        }
+      } // 正向、反向引用
     }
   }
 
