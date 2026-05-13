@@ -404,10 +404,16 @@ public class TypeDefinition {
       thisObjName = thisObjName.substring(0, thisObjName.length() - 1);
     } else if (thisObj.isLabelled("meta")) {
       thisObjName = thisObj.getLabelledOption("meta", "master");
+    } else if (thisObj.isLabelled("pivot")) {
+      thisObjName = thisObj.getLabelledOption("pivot", "master");
     }
     // 属性引用
     if (thisObjName.equals(anotherObj.getName())) {
-      return SELF_REF;
+      if (thisObj.getName().endsWith("_")) {
+        return SELF_REF;
+      } else if (thisObj.isLabelled("meta") || thisObj.isLabelled("pivot")) {
+        return ATTRIBUTE_REF;
+      }
     }
     if (thisObj.isLabelled("meta")) {
       if (anotherObj.getName().equals(thisObj.getLabelledOption("meta", "detail"))) {
