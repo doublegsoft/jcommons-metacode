@@ -414,6 +414,7 @@ public class TypeDefinition {
       } else if (thisObj.isLabelled("meta") || thisObj.isLabelled("pivot")) {
         return ATTRIBUTE_REF;
       }
+      return SELF_REF;
     }
     if (thisObj.isLabelled("meta")) {
       if (anotherObj.getName().equals(thisObj.getLabelledOption("meta", "detail"))) {
