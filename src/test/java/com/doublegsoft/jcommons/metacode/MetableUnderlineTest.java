@@ -28,18 +28,18 @@ public class MetableUnderlineTest extends TestBase {
     createIdentifiableAttribute(metableMeta, "property_name", new PrimitiveType("string"));
     createAttributeWithPrimitiveType(metableMeta, "property_value", new PrimitiveType("string"));
 
-    ObjectDefinition metableEx = new ObjectDefinition("metable_", retVal);
-    createAttribute(metableEx, "prop_a", new PrimitiveType("string"));
-    createAttribute(metableEx, "prop_b", new PrimitiveType("string"));
-    createAttribute(metableEx, "prop_c", new PrimitiveType("string"));
-    metableEx.setLabelledOption("meta", "", "");
+//    ObjectDefinition metableEx = new ObjectDefinition("metable_", retVal);
+    createAttribute(metable, "prop_a", new PrimitiveType("string"));
+    createAttribute(metable, "prop_b", new PrimitiveType("string"));
+    createAttribute(metable, "prop_c", new PrimitiveType("string"));
+    metable.setLabelledOption("meta", "", "");
     return retVal;
   }
 
   @Test
   public void test() throws Exception {
     ModelDefinition dataModel = buildDataModel();
-    ObjectDefinition metableEx = dataModel.findObjectByName("metable_");
+    ObjectDefinition metableEx = dataModel.findObjectByName("metable");
     TypeDefinition type = new TypeDefinition(metableEx, dataModel);
 
     FlowDefinition flow = type.getFlow();

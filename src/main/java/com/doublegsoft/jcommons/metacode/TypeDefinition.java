@@ -485,16 +485,18 @@ public class TypeDefinition {
         String masterObjName = obj.getLabelledOption("pivot", "master");
         ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
         addFields(masterObj, existingFieldNames);
-      }
-      if (obj.isLabelled("meta")) {
-        String masterObjName = obj.getLabelledOption("meta", "master");
-        if (masterObjName == null) {
-          masterObjName = obj.getName().substring(0, obj.getName().length() - 1);
-        }
-        ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
-        addFields(masterObj, existingFieldNames);
-      }
-      if (obj.isLabelled("extension")) {
+      } else if (obj.isLabelled("meta")) {
+//        String masterObjName = obj.getLabelledOption("meta", "master");
+//        if (masterObjName == null) {
+//          if (obj.getName().endsWith("_")) {
+//            masterObjName = obj.getName().substring(0, obj.getName().length() - 1);
+//          } else {
+//            masterObjName = obj.getName();
+//          }
+//        }
+//        ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
+//        addFields(masterObj, existingFieldNames);
+      } else if (obj.isLabelled("extension")) {
         String extensionObjName = obj.getLabelledOption("extension", "master");
         ObjectDefinition extensionObj = dataModel.findObjectByName(extensionObjName);
         addFields(extensionObj, existingFieldNames);

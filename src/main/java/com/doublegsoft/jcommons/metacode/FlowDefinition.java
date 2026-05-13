@@ -138,7 +138,11 @@ public class FlowDefinition {
     String masterObjName = obj.getLabelledOption("meta", "master");
     String detailObjName = obj.getLabelledOption("meta", "detail");
     if (masterObjName == null) {
-      masterObjName = obj.getName().substring(0, obj.getName().length() - 1);
+      if (obj.getName().endsWith("_")) {
+        masterObjName = obj.getName().substring(0, obj.getName().length() - 1);
+      } else {
+        masterObjName = obj.getName();
+      }
     }
     if (detailObjName == null) {
       detailObjName = masterObjName + "_meta";
