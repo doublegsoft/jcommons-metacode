@@ -53,6 +53,10 @@ public class MetableStandaloneTest extends TestBase {
     TypeDefinition type1 = flow.getTypes()[1];
     TypeDefinition type2 = flow.getTypes()[2];
 
+    Assert.assertEquals("SREF", type.getReferenceType(type0));
+    Assert.assertEquals("PREF", type.getReferenceType(type1));
+    Assert.assertEquals("CREF", type.getReferenceType(type2));
+
     Assert.assertTrue("meta扩展属性是以集合对象出现", type2.isCollection());
 
     Assert.assertEquals("metable", type0.getName());

@@ -24,6 +24,8 @@ public class TypeDefinition {
 
   public static final String ORIGINAL_REF = "OREF";
 
+  public static final String SELF_REF = "SREF";
+
   private final ModelDefinition dataModel;
 
   private String variable;
@@ -397,7 +399,44 @@ public class TypeDefinition {
   public String getReferenceType(TypeDefinition another) {
     ObjectDefinition thisObj = (ObjectDefinition) definition;
     ObjectDefinition anotherObj = (ObjectDefinition) another.definition;
+    String thisObjName = thisObj.getName();
+    if (thisObjName.endsWith("_")) {
+      thisObjName = thisObjName.substring(0, thisObjName.length() - 1);
+    } else if (thisObj.isLabelled("meta")) {
+      thisObjName = thisObj.getLabelledOption("meta", "master");
+    } else if (thisObj.isLabelled("pivot")) {
+      thisObjName = thisObj.getLabelledOption("pivot", "master");
+    }
     // 属性引用
+    if (thisObjName.equals(anotherObj.getName())) {
+      return SELF_REF;
+    }
+    if (thisObj.isLabelled("meta")) {
+      if (anotherObj.getName().equals(thisObj.getLabelledOption("meta", "detail"))) {
+        return COLLECTION_REF;
+      } else if (anotherObj.getName().equals(thisObjName + "_meta")) {
+        return COLLECTION_REF;
+      }
+    }
+    if (thisObj.isLabelled("pivot")) {
+      if (anotherObj.getName().equals(thisObj.getLabelledOption("pivot", "detail"))) {
+        return COLLECTION_REF;
+      }
+    }
+    String retVal = getReferenceType(thisObj, anotherObj);
+    if (NO_REF.equals(retVal)) {
+      if (thisObj.isLabelled("meta")) {
+        ObjectDefinition thisDataObj = dataModel.findObjectByName(thisObjName);
+        retVal = getReferenceType(thisDataObj, anotherObj);
+      } else if (thisObj.isLabelled("pivot")) {
+        ObjectDefinition thisDataObj = dataModel.findObjectByName(thisObjName);
+        retVal = getReferenceType(thisDataObj, anotherObj);
+      }
+    }
+    return retVal;
+  }
+
+  private String getReferenceType(ObjectDefinition thisObj, ObjectDefinition anotherObj) {
     for (AttributeDefinition attr : thisObj.getAttributes()) {
       if (attr.getType().getName().equals(anotherObj.getName())) {
         if (attr.isLabelled("persistence")) {
