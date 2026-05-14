@@ -55,7 +55,7 @@ public class FlowDefinition {
       }
       if (dataObj.isLabelled("pivot")) {
         buildForPivot();
-      } else if (dataObj.isLabelled("meta")) {
+      } else if (dataObj.isLabelled("meta") || obj.isLabelled("meta")) {
         buildForMeta();
       } else if (dataObj.isLabelled("extension")) {
         buildForExtension();
@@ -114,7 +114,7 @@ public class FlowDefinition {
 
     for (FieldDefinition field : masterType.getFields()) {
       if (field.getDefinition() instanceof AttributeDefinition) {
-        AttributeDefinition attr = (AttributeDefinition) field.getDefinition();
+        AttributeDefinition attr = field.getDefinition();
         if (attr.getType().isCustom()) {
           ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
           TypeDefinition refType = new TypeDefinition(refObj, dataModel);

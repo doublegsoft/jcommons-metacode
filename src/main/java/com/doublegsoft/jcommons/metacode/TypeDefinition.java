@@ -401,29 +401,20 @@ public class TypeDefinition {
     ObjectDefinition anotherObj = (ObjectDefinition) another.definition;
     String thisObjName = thisObj.getName();
     if (thisObjName.endsWith("_")) {
+      // 直接继承
       thisObjName = thisObjName.substring(0, thisObjName.length() - 1);
-    } else if (thisObj.isLabelled("meta")) {
-      if (thisObj.getLabelledOption("meta", "master") != null) {
-        thisObjName = thisObj.getLabelledOption("meta", "master");
-      }
-    } else if (thisObj.isLabelled("pivot")) {
-      thisObjName = thisObj.getLabelledOption("pivot", "master");
     }
-    // 属性引用
     if (thisObjName.equals(anotherObj.getName())) {
-      if (thisObj.getName().endsWith("_")) {
-        return SELF_REF;
-      } else if (thisObj.isLabelled("meta") && thisObj.getLabelledOption("meta", "master") != null) {
-        if (thisObj.getName().equals(thisObj.getLabelledOption("meta", "master"))) {
-          return SELF_REF;
-        }
-        return ATTRIBUTE_REF;
-      } else if (thisObj.isLabelled("pivot")) {
-        return ATTRIBUTE_REF;
-      }
       return SELF_REF;
     }
     if (thisObj.isLabelled("meta")) {
+      if (thisObj.getLabelledOption("meta", "master") != null) {
+        String masterObjName = thisObj.getLabelledOption("meta", "master");
+        if (masterObjName.equals(anotherObj.getName())) {
+          return ATTRIBUTE_REF;
+        }
+        thisObjName = masterObjName;
+      }
       if (anotherObj.getName().equals(thisObj.getLabelledOption("meta", "detail"))) {
         return COLLECTION_REF;
       } else if (anotherObj.getName().equals(thisObjName + "_meta")) {
@@ -431,7 +422,10 @@ public class TypeDefinition {
       }
     }
     if (thisObj.isLabelled("pivot")) {
-      if (anotherObj.getName().equals(thisObj.getLabelledOption("pivot", "detail"))) {
+      String masterObjName = thisObj.getLabelledOption("pivot", "master");
+      if (masterObjName.equals(anotherObj.getName())) {
+        return ATTRIBUTE_REF;
+      } else if (anotherObj.getName().equals(thisObj.getLabelledOption("pivot", "detail"))) {
         return COLLECTION_REF;
       }
     }
