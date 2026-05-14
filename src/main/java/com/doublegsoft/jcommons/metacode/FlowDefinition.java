@@ -4,6 +4,8 @@ import com.doublegsoft.jcommons.metabean.AttributeDefinition;
 import com.doublegsoft.jcommons.metabean.ModelDefinition;
 import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.CollectionType;
+import com.doublegsoft.jcommons.metabean.type.CustomType;
+import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metamodel.ValueDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinPredicateDefinition;
@@ -295,7 +297,14 @@ public class FlowDefinition {
         type.addField(field);
       } else if (attr.getType().isCollection()) {
         CollectionType collType = (CollectionType) attr.getType();
-        ObjectDefinition compObj = (ObjectDefinition) collType.getComponentType();
+        ObjectDefinition compObj = null;
+        // FIXME
+        ObjectType componentType = collType.getComponentType();
+        if (componentType instanceof CustomType) {
+          compObj = dataModel.findObjectByName(componentType.getName());
+        } else if (componentType instanceof ObjectDefinition) {
+          compObj = (ObjectDefinition) componentType;
+        }
         if (attr.isLabelled("conjunction")) {
           String conjObjName = attr.getLabelledOption("conjunction", "object");
           ObjectDefinition conjObj = dataModel.findObjectByName(conjObjName);
