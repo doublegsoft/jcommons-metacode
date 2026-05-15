@@ -260,6 +260,9 @@ public class TypeDefinition {
   }
 
   public String getVariable() {
+    if (variable == null) {
+      return getName();
+    }
     return variable;
   }
 
@@ -447,9 +450,13 @@ public class TypeDefinition {
       if (attr.getType().getName().equals(anotherObj.getName())) {
         if (attr.isLabelled("persistence")) {
           return PERSISTENCE_REF;
-        } else {
-          return ATTRIBUTE_REF;
+        } else if (attr.getType().isCustom()) {
+          ObjectDefinition dataObj = dataModel.findObjectByName(attr.getType().getName());
+          if (dataObj.isLabelled("persistence")) {
+            return PERSISTENCE_REF;
+          }
         }
+        return ATTRIBUTE_REF;
       }
       if (attr.getType().isCollection()) {
         CollectionType collType = (CollectionType) attr.getType();
