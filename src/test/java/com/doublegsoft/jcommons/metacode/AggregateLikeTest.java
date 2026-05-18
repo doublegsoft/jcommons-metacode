@@ -72,6 +72,7 @@ public class AggregateLikeTest extends TestBase {
     Assert.assertEquals("category", categoryType.getName());
     Assert.assertEquals("another", anotherType.getName());
 
+    Assert.assertNull("", simpleType.getReference());
     Assert.assertNotNull("category存在关联对象，因为被直接引用", categoryType.getReference());
     Assert.assertNotNull("another存在关联对象，定义了conjunction", anotherType.getReference());
   }
