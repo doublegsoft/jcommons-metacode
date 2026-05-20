@@ -218,6 +218,10 @@ public class FlowDefinition {
     }
     String masterObjName = obj.getLabelledOption("extension", "master");
     ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
+    TypeDefinition masterType = new TypeDefinition(masterObj, dataModel);
+    masterType.setCollection(true);
+    types.add(masterType);
+    buildReferences(masterType);
     String detailsExpr = obj.getLabelledOption("extension", "details");
     if (detailsExpr != null) {
       String[] objRefExprs = detailsExpr.split(";");

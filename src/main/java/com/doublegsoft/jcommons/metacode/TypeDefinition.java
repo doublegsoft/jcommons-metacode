@@ -432,12 +432,26 @@ public class TypeDefinition {
         return COLLECTION_REF;
       }
     }
+    if (thisObj.isLabelled("extension")) {
+      String masterObjName = thisObj.getLabelledOption("extension", "master");
+      String detailObjNames = thisObj.getLabelledOption("extension", "details");
+      if (masterObjName.equals(anotherObj.getName())) {
+        return ATTRIBUTE_REF;
+      } else {
+        if (detailObjNames != null) {
+          String[] names = detailObjNames.split(";");
+        }
+      }
+    }
     String retVal = getReferenceType(thisObj, anotherObj);
     if (NO_REF.equals(retVal)) {
       if (thisObj.isLabelled("meta")) {
         ObjectDefinition thisDataObj = dataModel.findObjectByName(thisObjName);
         retVal = getReferenceType(thisDataObj, anotherObj);
       } else if (thisObj.isLabelled("pivot")) {
+        ObjectDefinition thisDataObj = dataModel.findObjectByName(thisObjName);
+        retVal = getReferenceType(thisDataObj, anotherObj);
+      } else if (thisObj.isLabelled("extension")) {
         ObjectDefinition thisDataObj = dataModel.findObjectByName(thisObjName);
         retVal = getReferenceType(thisDataObj, anotherObj);
       }
