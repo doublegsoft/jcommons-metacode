@@ -231,8 +231,9 @@ public class FlowDefinition {
         }
         String objName = objRefExpr.substring(0, objRefExpr.indexOf("("));
         String attrName = objRefExpr.substring(objRefExpr.indexOf("(") + 1, objRefExpr.indexOf(")"));
-        ObjectDefinition extensionObj = dataModel.findObjectByName(objName);
-        AttributeDefinition extensionObjAttr = extensionObj.getAttribute(attrName);
+        ObjectDefinition detailObj = dataModel.findObjectByName(objName);
+        AttributeDefinition detailAttr = detailObj.getAttribute(attrName);
+        // TODO
       }
     }
   }
