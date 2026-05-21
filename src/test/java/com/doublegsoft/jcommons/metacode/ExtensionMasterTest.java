@@ -15,23 +15,23 @@ public class ExtensionMasterTest extends TestBase {
     createIdentifiableAttribute(category, "id", new PrimitiveType("long"));
     createAttributeWithPrimitiveType(category, "name", new PrimitiveType("string"));
 
-    ObjectDefinition metable = createPersistentObject(retVal, "user");
-    createIdentifiableAttribute(metable, "id", new PrimitiveType("long"));
-    createAttributeWithPrimitiveType(metable, "name", new PrimitiveType("string"));
-    createAttributeWithCustomType(metable, "category", category);
+    ObjectDefinition user = createPersistentObject(retVal, "user");
+    createIdentifiableAttribute(user, "id", new PrimitiveType("long"));
+    createAttributeWithPrimitiveType(user, "name", new PrimitiveType("string"));
+    createAttributeWithCustomType(user, "category", category);
 
-    ObjectDefinition metableEx = new ObjectDefinition("online_user", retVal);
-    createAttribute(metableEx, "token", new PrimitiveType("string"));
-    createAttribute(metableEx, "login_time", new PrimitiveType("datetime"));
-    metableEx.setLabelledOption("extension", "master", "user");
+    ObjectDefinition onlineUser = new ObjectDefinition("online_user", retVal);
+    createAttribute(onlineUser, "token", new PrimitiveType("string"));
+    createAttribute(onlineUser, "login_time", new PrimitiveType("datetime"));
+    onlineUser.setLabelledOption("extension", "master", "user");
     return retVal;
   }
 
   @Test
   public void test() throws Exception {
     ModelDefinition dataModel = buildDataModel();
-    ObjectDefinition metableEx = dataModel.findObjectByName("online_user");
-    TypeDefinition type = new TypeDefinition(metableEx, dataModel);
+    ObjectDefinition onlineUser = dataModel.findObjectByName("online_user");
+    TypeDefinition type = new TypeDefinition(onlineUser, dataModel);
 
     FlowDefinition flow = type.getFlow();
     Assert.assertEquals("一个user",

@@ -218,8 +218,8 @@ public class FlowDefinition {
     }
     String masterObjName = obj.getLabelledOption("extension", "master");
     ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
+    AttributeDefinition masterObjIdAttr = masterObj.getIdentifiableAttribute();
     TypeDefinition masterType = new TypeDefinition(masterObj, dataModel);
-    masterType.setCollection(true);
     types.add(masterType);
     buildReferences(masterType);
     String detailsExpr = obj.getLabelledOption("extension", "details");
@@ -229,11 +229,26 @@ public class FlowDefinition {
         if (Strings.isEmpty(objRefExpr)) {
           continue;
         }
-        String objName = objRefExpr.substring(0, objRefExpr.indexOf("("));
-        String attrName = objRefExpr.substring(objRefExpr.indexOf("(") + 1, objRefExpr.indexOf(")"));
-        ObjectDefinition detailObj = dataModel.findObjectByName(objName);
-        AttributeDefinition detailAttr = detailObj.getAttribute(attrName);
-        // TODO
+        ObjectDefinition detailObj = null;
+        AttributeDefinition detailAttr = null;
+        String objName = null;
+        if (objRefExpr.contains("(")) {
+          objName = objRefExpr.substring(0, objRefExpr.indexOf("("));
+          detailObj = dataModel.findObjectByName(objName);
+          String attrname = objRefExpr.substring(objRefExpr.indexOf("(") + 1, objRefExpr.indexOf(")"));
+          detailAttr = detailObj.getAttribute(attrname);
+        } else {
+          objName = objRefExpr;
+          detailObj = dataModel.findObjectByName(objName);
+          for (AttributeDefinition attrInDetail : detailObj.getAttributes()) {
+            if (masterObj.getName().equals(attrInDetail.getType().getName())) {
+              detailAttr = attrInDetail;
+            }
+          }
+        }
+        TypeDefinition detailType = new TypeDefinition(detailObj, dataModel);
+        types.add(detailType);
+        buildReferences(detailType, detailAttr, masterType);
       }
     }
   }
@@ -330,7 +345,7 @@ public class FlowDefinition {
           type.addField(field);
         }
       } else if (attr.isLabelled("conjunction")) {
-        // TODO
+        // TODO: 一定要想起来在这要干什么
       }
     }
   }
@@ -369,6 +384,12 @@ public class FlowDefinition {
     AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, targetAttrName);
 
     current.setReference(createJoinCondition(sourceAttr, sourceObj, targetAttr, targetObj));
+  }
+
+  private void buildReferences(TypeDefinition detail, AttributeDefinition attrRef, TypeDefinition master) {
+    ObjectDefinition sourceObj = detail.getDefinition();
+    ObjectDefinition masterObj = master.getDefinition();
+    detail.setReference(createJoinCondition(masterObj.getIdentifiableAttribute(), masterObj, attrRef, sourceObj));
   }
 
   private void buildReferences(TypeDefinition current) {
