@@ -479,7 +479,7 @@ public class TypeDefinition {
         }
       }
       if (attr.isLabelled("original")) {
-        String origObjName = thisObj.getLabelledOption("original", "object");
+        String origObjName = attr.getLabelledOption("original", "object");
         if (origObjName.equals(anotherObj.getName())) {
           return ORIGINAL_REF;
         }
