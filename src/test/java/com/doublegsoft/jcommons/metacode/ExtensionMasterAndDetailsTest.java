@@ -51,8 +51,15 @@ public class ExtensionMasterAndDetailsTest extends TestBase {
     FlowDefinition flow = type.getFlow();
     Assert.assertEquals("article, article_engagement, positive_review", 3, flow.getTypes().length);
 
+    TypeDefinition typeArticle = flow.getTypes()[0];
+    TypeDefinition typeArticleEngagement = flow.getTypes()[1];
     TypeDefinition typePositiveReview = flow.getTypes()[2];
     Assert.assertNotNull(typePositiveReview.getReference());
+
+    // TODO: 好好分析这一块的逻辑
+    Assert.assertEquals("AREF", type.getReferenceType(typeArticle));
+    Assert.assertEquals("AREF", type.getReferenceType(typeArticleEngagement));
+    Assert.assertEquals("AREF", type.getReferenceType(typePositiveReview));
 
     JoinConditionDefinition joinCondition = typePositiveReview.getReference();
     Assert.assertEquals("article", joinCondition.getLeftObject().getName());

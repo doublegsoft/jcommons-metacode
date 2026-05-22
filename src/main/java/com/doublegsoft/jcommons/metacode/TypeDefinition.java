@@ -400,6 +400,7 @@ public class TypeDefinition {
   }
 
   public String getReferenceType(TypeDefinition another) {
+    String retVal = null;
     ObjectDefinition thisObj = (ObjectDefinition) definition;
     ObjectDefinition anotherObj = (ObjectDefinition) another.definition;
     String thisObjName = thisObj.getName();
@@ -435,15 +436,42 @@ public class TypeDefinition {
     if (thisObj.isLabelled("extension")) {
       String masterObjName = thisObj.getLabelledOption("extension", "master");
       String detailObjNames = thisObj.getLabelledOption("extension", "details");
+      ObjectDefinition masterObj = dataModel.findObjectByName(masterObjName);
       if (masterObjName.equals(anotherObj.getName())) {
         return ATTRIBUTE_REF;
       } else {
         if (detailObjNames != null) {
           String[] names = detailObjNames.split(";");
+          for (String name : names) {
+            ObjectDefinition detailObj = null;
+            AttributeDefinition detailObjAttr = null;
+            if (name.contains("(")) {
+              detailObj = dataModel.findObjectByName(name.substring(0, name.indexOf("(")));
+              String attrName = name.substring(name.indexOf("(") + 1, name.indexOf(")"));
+              detailObjAttr = detailObj.getAttribute(attrName);
+            } else {
+              detailObj = dataModel.findObjectByName(name);
+            }
+            if (detailObj.getName().equals(anotherObj.getName())) {
+              retVal = getReferenceType(detailObj, masterObj);
+              if (NO_REF.equals(retVal)) {
+                retVal = getReferenceType(masterObj, detailObj);
+              }
+              if (!NO_REF.equals(retVal)) {
+                return ATTRIBUTE_REF;
+              }
+              if (detailObjAttr != null) {
+                return ATTRIBUTE_REF;
+              }
+            }
+          }
         }
       }
     }
-    String retVal = getReferenceType(thisObj, anotherObj);
+    if (!NO_REF.equals(retVal)) {
+      return retVal;
+    }
+    retVal = getReferenceType(thisObj, anotherObj);
     if (NO_REF.equals(retVal)) {
       if (thisObj.isLabelled("meta")) {
         ObjectDefinition thisDataObj = dataModel.findObjectByName(thisObjName);
