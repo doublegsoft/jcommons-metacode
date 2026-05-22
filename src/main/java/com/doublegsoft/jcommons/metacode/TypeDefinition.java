@@ -468,7 +468,7 @@ public class TypeDefinition {
         }
       }
     }
-    if (!NO_REF.equals(retVal)) {
+    if (!NO_REF.equals(retVal) && retVal != null) {
       return retVal;
     }
     retVal = getReferenceType(thisObj, anotherObj);
