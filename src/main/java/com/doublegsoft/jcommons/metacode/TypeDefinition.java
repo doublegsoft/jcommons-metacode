@@ -54,7 +54,8 @@ public class TypeDefinition {
         !(definition instanceof AggregateRootDefinition) &&
         !(definition instanceof CompositeRowDefinition)) {
       throw new IllegalArgumentException("the definition is not accepted, " +
-          "just as object definition, aggregate root definition, composite row definition");
+          "just as object definition, aggregate root definition, composite row definition," +
+          "and it is " + definition.getClass() + ".");
     }
     this.definition = definition;
     this.dataModel = dataModel;

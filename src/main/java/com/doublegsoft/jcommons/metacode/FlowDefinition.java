@@ -257,7 +257,15 @@ public class FlowDefinition {
     ObjectDefinition obj = root.getDefinition();
     ObjectDefinition dataObj = dataModel.findObjectByName(obj.getName());
     for (AttributeDefinition attr : dataObj.getAttributes()) {
-      ObjectDefinition refObj = dataModel.findObjectByName(attr.getType().getName());
+      ObjectDefinition refObj;
+      if (attr.getType().isCollection()) {
+        CollectionType collType = (CollectionType) attr.getType();
+        refObj = dataModel.findObjectByName(collType.getComponentType().getName());
+      } else if (attr.getType().isCustom()) {
+        refObj = dataModel.findObjectByName(attr.getType().getName());
+      } else {
+        continue;
+      }
       TypeDefinition refType = new TypeDefinition(refObj, dataModel);
       types.add(refType);
       buildReferences(refType, attr);
@@ -354,11 +362,12 @@ public class FlowDefinition {
     return getTypes(true);
   }
 
+  // 这个应该是有关联关系的都应该算上
   public TypeDefinition[] getTypes(boolean persistent) {
     List<TypeDefinition> retVal = new ArrayList<>();
     for (TypeDefinition type : types) {
       if (persistent) {
-        if (type.isPersistence()) {
+        if (type.isPersistence() || type.getReference() != null) {
           retVal.add(type);
         }
       } else {
@@ -400,24 +409,61 @@ public class FlowDefinition {
       TypeDefinition prevType = types.get(i);
       ObjectDefinition prevObj = prevType.getDefinition();
       prevObj = dataModel.findObjectByName(prevObj.getName());
-      AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
-      if (refAttrs.length > 0) {
-        // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
-        current.setReference(createJoinCondition(prevObj.getIdentifiableAttribute(), prevObj,
-            refAttrs[0], currObj));
-      } else {
-        // 反向引用
-        refAttrs = prevObj.getCustomAttributes(currObj);
-        for (AttributeDefinition refAttr : refAttrs) {
-          if (Strings.isEmpty(current.getVariable()) ||
-              refAttr.getName().equals(current.getVariable())) {
-            current.setReference(createJoinCondition(refAttr, prevObj,
-                currObj.getIdentifiableAttribute(), currObj));
-            break;
+      boolean isBuilt = buildReferences(currObj, prevObj, current);
+      if (isBuilt) {
+        return;
+      }
+      if (!currObj.isLabelled("persistence")) {
+        for (AttributeDefinition currAttr : currObj.getAttributes()) {
+          if (currAttr.getType().isCustom()) {
+            ObjectDefinition attrAsObj = dataModel.findObjectByName(currAttr.getType().getName());
+            if (buildReferences(attrAsObj, prevObj, current)) {
+              return;
+            }
           }
         }
-      } // 正向、反向引用
+      }
+//      AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
+//      if (refAttrs.length > 0) {
+//        // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
+//        current.setReference(createJoinCondition(prevObj.getIdentifiableAttribute(), prevObj,
+//            refAttrs[0], currObj));
+//      } else {
+//        // 反向引用
+//        refAttrs = prevObj.getCustomAttributes(currObj);
+//        for (AttributeDefinition refAttr : refAttrs) {
+//          if (Strings.isEmpty(current.getVariable()) ||
+//              refAttr.getName().equals(current.getVariable())) {
+//            current.setReference(createJoinCondition(refAttr, prevObj,
+//                currObj.getIdentifiableAttribute(), currObj));
+//            break;
+//          }
+//        }
+//      } // 正向、反向引用
     }
+  }
+
+  private boolean buildReferences(ObjectDefinition thisObj, ObjectDefinition anotherObj, TypeDefinition current) {
+    AttributeDefinition[] refAttrs = thisObj.getCustomAttributes(anotherObj);
+    if (refAttrs.length > 0) {
+      // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
+      current.setReference(createJoinCondition(
+          anotherObj.getIdentifiableAttribute(), anotherObj,
+          refAttrs[0], thisObj));
+      return true;
+    } else {
+      // 反向引用
+      refAttrs = anotherObj.getCustomAttributes(thisObj);
+      for (AttributeDefinition refAttr : refAttrs) {
+        if (Strings.isEmpty(current.getVariable()) ||
+            refAttr.getName().equals(current.getVariable())) {
+          current.setReference(createJoinCondition(refAttr, anotherObj,
+              thisObj.getIdentifiableAttribute(), thisObj));
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private JoinConditionDefinition createJoinCondition(AttributeDefinition leftAttr,
