@@ -8,7 +8,7 @@ import com.doublegsoft.jcommons.metabean.type.PrimitiveType;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AggregateLikeTest extends TestBase {
+public class AggregatelikeTest extends TestBase {
   private ModelDefinition buildDataModel() {
     ModelDefinition retVal = new ModelDefinition();
     AttributeDefinition attr = null;
