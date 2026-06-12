@@ -61,7 +61,7 @@ public class FlowDefinition {
         buildForMeta();
       } else if (dataObj.isLabelled("extension")) {
         buildForExtension();
-      } else if (isAggregateLike) {
+      } else if (isAggregateLike && !obj.isLabelled("persistence")) {
         buildForAggregate();
       } else {
         // composite or plain
@@ -326,7 +326,6 @@ public class FlowDefinition {
       } else if (attr.getType().isCollection()) {
         CollectionType collType = (CollectionType) attr.getType();
         ObjectDefinition compObj = null;
-        // FIXME
         ObjectType componentType = collType.getComponentType();
         if (componentType instanceof CustomType) {
           compObj = dataModel.findObjectByName(componentType.getName());
