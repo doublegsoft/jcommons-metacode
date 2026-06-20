@@ -254,8 +254,8 @@ public class FlowDefinition {
   }
 
   private void buildForAggregate() {
-    ObjectDefinition obj = root.getDefinition();
-    ObjectDefinition dataObj = dataModel.findObjectByName(obj.getName());
+    ObjectDefinition rootObj = root.getDefinition();
+    ObjectDefinition dataObj = dataModel.findObjectByName(rootObj.getName());
     for (AttributeDefinition attr : dataObj.getAttributes()) {
       ObjectDefinition refObj;
       if (attr.getType().isCollection()) {
@@ -268,6 +268,12 @@ public class FlowDefinition {
       }
       TypeDefinition refType = new TypeDefinition(refObj, dataModel);
       types.add(refType);
+      // 如何解决match和graph那种用aggregate方式去定义的问题
+      for (AttributeDefinition rootAttr : rootObj.getAttributes()) {
+        if (refObj.getName().equals(rootAttr.getType().getName()) && refType.isVariableNull()) {
+          refType.setVariable(rootAttr.getName());
+        }
+      }
       buildReferences(refType, attr);
     }
   }

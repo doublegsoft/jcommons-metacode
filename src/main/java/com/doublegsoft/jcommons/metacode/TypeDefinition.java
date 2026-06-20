@@ -9,6 +9,7 @@ import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.QualifiedObjectDefinition;
 import com.doublegsoft.jcommons.metamodel.root.AggregateRootDefinition;
 import com.doublegsoft.jcommons.utils.Inflector;
+import com.doublegsoft.jcommons.utils.Strings;
 
 import java.util.*;
 
@@ -258,6 +259,10 @@ public class TypeDefinition {
 
   public void addField(FieldDefinition field) {
     fields.add(field);
+  }
+
+  public boolean isVariableNull() {
+    return Strings.isEmpty(variable);
   }
 
   public String getVariable() {
