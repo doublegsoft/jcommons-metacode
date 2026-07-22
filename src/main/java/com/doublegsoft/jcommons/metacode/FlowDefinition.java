@@ -461,7 +461,8 @@ public class FlowDefinition {
       refAttrs = anotherObj.getCustomAttributes(thisObj);
       for (AttributeDefinition refAttr : refAttrs) {
         if (Strings.isEmpty(current.getVariable()) ||
-            refAttr.getName().equals(current.getVariable())) {
+            refAttr.getName().equals(current.getVariable()) ||
+            refAttr.getName().equals(current.getName())) {
           current.setReference(createJoinCondition(refAttr, anotherObj,
               thisObj.getIdentifiableAttribute(), thisObj));
           return true;

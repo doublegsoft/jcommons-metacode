@@ -21,6 +21,8 @@ public class TypeDefinition {
 
   public static final String ATTRIBUTE_REF = "AREF";
 
+//  public static final String REFERENCED_REF = "RREF";
+
   public static final String COLLECTION_REF = "CREF";
 
   public static final String ORIGINAL_REF = "OREF";
@@ -506,7 +508,7 @@ public class TypeDefinition {
       if (attr.getType().getName().equals(anotherObj.getName())) {
         if (attr.isLabelled("persistence")) {
           return PERSISTENCE_REF;
-        } else if (attr.getType().isCustom()) {
+        } else if (attr.getType().isCustom() && !isAggregate() && !isComposite()) {
           ObjectDefinition dataObj = dataModel.findObjectByName(attr.getType().getName());
           if (dataObj.isLabelled("persistence")) {
             return PERSISTENCE_REF;
