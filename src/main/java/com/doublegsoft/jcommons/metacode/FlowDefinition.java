@@ -258,15 +258,18 @@ public class FlowDefinition {
     ObjectDefinition dataObj = dataModel.findObjectByName(rootObj.getName());
     for (AttributeDefinition attr : dataObj.getAttributes()) {
       ObjectDefinition refObj;
+      boolean collection = false;
       if (attr.getType().isCollection()) {
         CollectionType collType = (CollectionType) attr.getType();
         refObj = dataModel.findObjectByName(collType.getComponentType().getName());
+        collection = true;
       } else if (attr.getType().isCustom()) {
         refObj = dataModel.findObjectByName(attr.getType().getName());
       } else {
         continue;
       }
       TypeDefinition refType = new TypeDefinition(refObj, dataModel);
+      refType.setCollection(collection);
       types.add(refType);
       // 如何解决match和graph那种用aggregate方式去定义的问题
       for (AttributeDefinition rootAttr : rootObj.getAttributes()) {
@@ -380,6 +383,89 @@ public class FlowDefinition {
       }
     }
     return retVal.toArray(new TypeDefinition[0]);
+  }
+
+  public TypeDefinition[] sortTypes() {
+    return sortTypes(true);
+  }
+
+  public TypeDefinition[] sortTypes(boolean persistent) {
+    Map<String, TypeDefinition> typeMap = new HashMap<>();
+    Map<String, List<String>> adjList = new HashMap<>();
+    Map<String, Integer> inDegree = new HashMap<>();
+
+    List<TypeDefinition> collections = new ArrayList<>();
+    List<TypeDefinition> nonCollections = new ArrayList<>();
+
+    // 1. 初始化基础数据结构（分离 collection 和 non-collection 类型）
+    for (TypeDefinition type : types) {
+      ObjectDefinition dataObj = type.getDefinition();
+      if (persistent) {
+        if (!dataObj.isLabelled("persistence")) {
+          continue;
+        }
+      }
+      if (type.isCollection()) {
+        collections.add(type);
+      } else {
+        nonCollections.add(type);
+        typeMap.put(type.getName(), type);
+        adjList.put(type.getName(), new ArrayList<>());
+        inDegree.put(type.getName(), 0);
+      }
+    }
+
+    // 2. 构建邻接表（图）和节点的入度（仅针对 non-collection）
+    for (TypeDefinition type : nonCollections) {
+      String typeName = type.getName();
+      ObjectDefinition dataObj = type.getDefinition();
+
+      for (AttributeDefinition dataAttr : dataObj.getAttributes()) {
+        if (dataAttr.getType().isCustom()) {
+          String dependencyName = dataAttr.getType().getName();
+          // 确保依赖的自定义类型在候选集内
+          if (typeMap.containsKey(dependencyName)) {
+            // 被依赖项 (B) 指向 依赖项 (A) -> (B -> A)
+            adjList.get(dependencyName).add(typeName);
+            inDegree.put(typeName, inDegree.get(typeName) + 1);
+          }
+        }
+      }
+    }
+
+    // 3. 将所有入度为 0 的节点（仅限 non-collection）放入队列
+    Queue<String> queue = new LinkedList<>();
+    for (Map.Entry<String, Integer> entry : inDegree.entrySet()) {
+      if (entry.getValue() == 0) {
+        queue.add(entry.getKey());
+      }
+    }
+
+    // 4. 拓扑排序主循环
+    List<TypeDefinition> result = new ArrayList<>();
+    while (!queue.isEmpty()) {
+      String current = queue.poll();
+      result.add(typeMap.get(current));
+      // 减少邻居节点的入度
+      for (String neighbor : adjList.get(current)) {
+        int updatedInDegree = inDegree.get(neighbor) - 1;
+        inDegree.put(neighbor, updatedInDegree);
+        // 如果入度降为 0，说明其所有前置依赖已处理完，放入队列
+        if (updatedInDegree == 0) {
+          queue.add(neighbor);
+        }
+      }
+    }
+
+    // 5. 循环依赖（环）检测（仅对比非集合类型的数量）
+    if (result.size() != nonCollections.size()) {
+      throw new IllegalStateException("检测到数据定义中存在循环依赖，无法构建合法的处理顺序。");
+    }
+
+    // 6. 自动将所有 collection 类型追加到最后
+    result.addAll(collections);
+
+    return result.toArray(new TypeDefinition[0]);
   }
 
   private void buildReferences(TypeDefinition current, AttributeDefinition attrRef) {
