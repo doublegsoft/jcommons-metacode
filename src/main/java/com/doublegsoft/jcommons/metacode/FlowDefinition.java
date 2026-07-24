@@ -414,7 +414,6 @@ public class FlowDefinition {
         inDegree.put(type.getName(), 0);
       }
     }
-
     // 2. 构建邻接表（图）和节点的入度（仅针对 non-collection）
     for (TypeDefinition type : nonCollections) {
       String typeName = type.getName();
@@ -432,7 +431,6 @@ public class FlowDefinition {
         }
       }
     }
-
     // 3. 将所有入度为 0 的节点（仅限 non-collection）放入队列
     Queue<String> queue = new LinkedList<>();
     for (Map.Entry<String, Integer> entry : inDegree.entrySet()) {
