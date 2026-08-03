@@ -17,16 +17,33 @@ public class TypeDefinition {
 
   public static final String NO_REF = "NREF";
 
+  /**
+   * 作为属性存在，并且标注为可持久化的，可以是基本数据类型的属性，
+   * 也可以是引用其他类型的属性。
+   */
   public static final String PERSISTENCE_REF = "PREF";
 
+  /**
+   * 作为属性存在，不是可持久化的，可以是基本数据类型的属性，
+   * 也可以是引用其他类型的属性。
+   */
   public static final String ATTRIBUTE_REF = "AREF";
 
 //  public static final String REFERENCED_REF = "RREF";
 
+  /**
+   * 作为集合属性的引用关系。
+   */
   public static final String COLLECTION_REF = "CREF";
 
+  /**
+   * 标注为original的属性的引用关系。
+   */
   public static final String ORIGINAL_REF = "OREF";
 
+  /**
+   * 自身对象（root、master、aggregate）的引用关系。
+   */
   public static final String SELF_REF = "SREF";
 
   private final ModelDefinition dataModel;
