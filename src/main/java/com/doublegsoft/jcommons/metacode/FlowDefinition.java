@@ -536,7 +536,7 @@ public class FlowDefinition {
    * @param typeDef 目标类型定义
    * @return 关联的父节点与兄弟节点类型定义数组；若输入为空或集合类型，则返回空数组
    */
-  public TypeDefinition[] getParentsAndSibilings(TypeDefinition typeDef) {
+  public TypeDefinition[] getParentsAndSiblings(TypeDefinition typeDef) {
     if (typeDef == null || typeDef.isCollection()) {
       return new TypeDefinition[0];
     }
