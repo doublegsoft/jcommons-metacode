@@ -393,6 +393,19 @@ public class FlowDefinition {
     return sortTypes(true);
   }
 
+  /**
+   * 对所有类型定义进行拓扑排序，以构建合法的数据处理或初始化顺序。
+   * <p>
+   * 排序规则：
+   * 1. 优先处理被依赖的独立类型（入度为 0），再处理依赖它们的上游类型。
+   * 2. 非集合类型（non-collection）参与依赖图的构建与循环依赖检测。
+   * 3. 集合类型（collection）不参与依赖拓扑，排序完成后将自动追加到数组末尾。
+   * </p>
+   *
+   * @param persistent 是否开启持久化过滤。若为 true，则仅对包含 "persistence" 标签的类型进行排序
+   * @return 排序后的类型定义数组
+   * @throws IllegalStateException 当检测到数据定义中存在循环依赖（有向图存在环）时抛出
+   */
   public TypeDefinition[] sortTypes(boolean persistent) {
     Map<String, TypeDefinition> typeMap = new HashMap<>();
     Map<String, List<String>> adjList = new HashMap<>();
@@ -404,6 +417,7 @@ public class FlowDefinition {
     // 1. 初始化基础数据结构（分离 collection 和 non-collection 类型）
     for (TypeDefinition type : types) {
       ObjectDefinition dataObj = type.getDefinition();
+      dataObj = dataModel.findObjectByName(dataObj.getName());
       if (persistent) {
         if (!dataObj.isLabelled("persistence")) {
           continue;
@@ -413,14 +427,14 @@ public class FlowDefinition {
         collections.add(type);
       } else {
         nonCollections.add(type);
-        typeMap.put(type.getName(), type);
-        adjList.put(type.getName(), new ArrayList<>());
-        inDegree.put(type.getName(), 0);
+        typeMap.put(type.getVariable(), type);
+        adjList.put(type.getVariable(), new ArrayList<>());
+        inDegree.put(type.getVariable(), 0);
       }
     }
     // 2. 构建邻接表（图）和节点的入度（仅针对 non-collection）
     for (TypeDefinition type : nonCollections) {
-      String typeName = type.getName();
+      String typeName = type.getVariable();
       ObjectDefinition dataObj = type.getDefinition();
 
       for (AttributeDefinition dataAttr : dataObj.getAttributes()) {
@@ -468,6 +482,92 @@ public class FlowDefinition {
     result.addAll(collections);
 
     return result.toArray(new TypeDefinition[0]);
+  }
+
+  /**
+   * 获取直接依赖于给定类型的子节点（即图中的下游节点 / 被动依赖方）。
+   * <p>
+   * 关系定义：
+   * 若类型 A 的自定义属性引用了类型 B，则 A 依赖于 B。此时 A 是 B 的子节点（B -> A）。
+   * </p>
+   *
+   * @param typeObj 目标类型定义（作为被引用的父节点）
+   * @return 直接依赖于当前类型的下游类型定义数组；若输入为 null 或集合类型，则返回空数组
+   */
+  public TypeDefinition[] getChildren(TypeDefinition typeObj) {
+    if (typeObj == null || typeObj.isCollection()) {
+      return new TypeDefinition[0];
+    }
+
+    List<TypeDefinition> children = new ArrayList<>();
+    String typeName = typeObj.getName();
+
+    // 遍历所有非集合类型，寻找将当前 typeObj 作为其自定义属性引用的类型
+    for (TypeDefinition type : this.types) {
+      if (type.isCollection()) {
+        continue;
+      }
+
+      ObjectDefinition dataObj = type.getDefinition();
+      if (dataModel != null) {
+        dataObj = dataModel.findObjectByName(dataObj.getName());
+      }
+
+      if (dataObj != null) {
+        for (AttributeDefinition dataAttr : dataObj.getAttributes()) {
+          if (dataAttr.getType().isCustom() && typeName.equals(dataAttr.getType().getName())) {
+            children.add(type);
+            break; // 该类型已确认依赖当前类型，跳出属性循环
+          }
+        }
+      }
+    }
+    return children.toArray(new TypeDefinition[0]);
+  }
+
+  /**
+   * 获取给定类型所直接依赖的父节点（即图中的上游节点 / 主动依赖的前置项）。
+   * <p>
+   * 关系定义：
+   * 若当前类型 A 的内部属性中声明了自定义类型 B，则 B 是 A 的前置依赖。此时 B 是 A 的父节点（B -> A）。
+   * </p>
+   *
+   * @param typeDef 目标类型定义（作为引用发起方的子节点）
+   * @return 当前类型所直接引用的上游自定义类型定义数组；若输入为 null 或集合类型，则返回空数组
+   */
+  public TypeDefinition[] getParents(TypeDefinition typeDef) {
+    if (typeDef == null || typeDef.isCollection()) {
+      return new TypeDefinition[0];
+    }
+
+    List<TypeDefinition> parents = new ArrayList<>();
+    ObjectDefinition dataObj = typeDef.getDefinition();
+
+    if (dataModel != null) {
+      dataObj = dataModel.findObjectByName(dataObj.getName());
+    }
+
+    if (dataObj != null) {
+      // 遍历当前类型的所有属性
+      for (AttributeDefinition dataAttr : dataObj.getAttributes()) {
+        if (dataAttr.getType().isCustom()) {
+          String dependencyName = dataAttr.getType().getName();
+
+          // 在全局 types 中寻找该自定义属性对应的类型定义（即父节点）
+          for (TypeDefinition type : this.types) {
+            if (type.isCollection()) {
+              continue;
+            }
+            // 结合 sortTypes 和 getChildren 的上下文，进行名称匹配
+            if (dependencyName.equals(type.getVariable()) || dependencyName.equals(type.getName())) {
+              parents.add(type);
+              break; // 已找到对应的类型定义，跳出当前属性的匹配，继续检查下一个属性
+            }
+          }
+        }
+      }
+    }
+    return parents.toArray(new TypeDefinition[0]);
   }
 
   private void buildReferences(TypeDefinition current, AttributeDefinition attrRef) {

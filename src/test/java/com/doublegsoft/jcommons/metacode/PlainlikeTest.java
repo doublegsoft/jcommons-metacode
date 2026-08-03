@@ -75,12 +75,13 @@ public class PlainlikeTest extends TestBase {
     TypeDefinition type = new TypeDefinition(match, dataModel);
 
     FlowDefinition flow = new FlowDefinition(type, dataModel);
-    Assert.assertEquals("在这个流程中应该有四个类型对象", 4, flow.getTypes().length);
+    TypeDefinition[] types = flow.getTypes();
+    Assert.assertEquals("在这个流程中应该有四个类型对象", 4, types.length);
 
-    ObjectDefinition matchObj = flow.getTypes()[0].getDefinition();
+    ObjectDefinition matchObj = types[0].getDefinition();
     matchObj = dataModel.findObjectByName(matchObj.getName());
 
-    TypeDefinition home = flow.getTypes()[2];
+    TypeDefinition home = types[2];
 
     ObjectDefinition teamObj = home.getDefinition();
     teamObj = dataModel.findObjectByName(teamObj.getName());
@@ -90,7 +91,7 @@ public class PlainlikeTest extends TestBase {
     Assert.assertEquals(matchObj.getAttribute("home"), joinPredicate.getLeftAttribute());
     Assert.assertEquals(teamObj.getIdentifiableAttribute(), joinPredicate.getRightAttribute());
 
-    TypeDefinition away = flow.getTypes()[3];
+    TypeDefinition away = types[3];
     teamObj = away.getDefinition();
     teamObj = dataModel.findObjectByName(teamObj.getName());
 
