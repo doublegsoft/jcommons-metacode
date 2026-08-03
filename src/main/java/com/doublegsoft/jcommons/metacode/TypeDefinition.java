@@ -525,16 +525,14 @@ public class TypeDefinition {
       if (attr.getType().getName().equals(anotherObj.getName())) {
         if (attr.isLabelled("persistence")) {
           return PERSISTENCE_REF;
-        } else if (attr.getType().isCustom() && !isAggregate() && !isComposite()) {
+        }
+        else if (attr.getType().isCustom() && !isAggregate() && !isComposite()) {
           ObjectDefinition dataObj = dataModel.findObjectByName(attr.getType().getName());
           if (dataObj.isLabelled("persistence")) {
             return PERSISTENCE_REF;
           }
         }
         return ATTRIBUTE_REF;
-      }
-      if (attr.isLabelled("original")) {
-        return ORIGINAL_REF;
       }
     }
     return NO_REF;
