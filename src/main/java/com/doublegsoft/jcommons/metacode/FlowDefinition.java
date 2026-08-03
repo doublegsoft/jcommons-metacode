@@ -6,7 +6,6 @@ import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.CollectionType;
 import com.doublegsoft.jcommons.metabean.type.CustomType;
 import com.doublegsoft.jcommons.metabean.type.ObjectType;
-import com.doublegsoft.jcommons.metamodel.ValueDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinPredicateDefinition;
 import com.doublegsoft.jcommons.utils.Strings;
@@ -526,16 +525,18 @@ public class FlowDefinition {
   }
 
   /**
-   * 获取给定类型所直接依赖的父节点（即图中的上游节点 / 主动依赖的前置项）。
+   * 获取当前类型的所有父节点（直接依赖项）以及协同标识节点（兄弟节点）。
    * <p>
-   * 关系定义：
-   * 若当前类型 A 的内部属性中声明了自定义类型 B，则 B 是 A 的前置依赖。此时 B 是 A 的父节点（B -> A）。
+   * 该方法包含两部分关联逻辑：
+   * 1. <b>直接父节点（Parents）</b>：当前类型内部直接作为自定义属性引用的类型（A 包含属性 B，则 B 是 A 的父节点）。
+   * 2. <b>协同标识/兄弟节点（Siblings）</b>：遍历模型中其他对象，若其他对象的“可标识属性（如主外键/联合主键）”
+   *    引用了当前类型，则将该外部对象的类型也作为关联节点一并引入。
    * </p>
    *
-   * @param typeDef 目标类型定义（作为引用发起方的子节点）
-   * @return 当前类型所直接引用的上游自定义类型定义数组；若输入为 null 或集合类型，则返回空数组
+   * @param typeDef 目标类型定义
+   * @return 关联的父节点与兄弟节点类型定义数组；若输入为空或集合类型，则返回空数组
    */
-  public TypeDefinition[] getParents(TypeDefinition typeDef) {
+  public TypeDefinition[] getParentsAndSibilings(TypeDefinition typeDef) {
     if (typeDef == null || typeDef.isCollection()) {
       return new TypeDefinition[0];
     }
@@ -562,6 +563,24 @@ public class FlowDefinition {
             if (dependencyName.equals(type.getVariable()) || dependencyName.equals(type.getName())) {
               parents.add(type);
               break; // 已找到对应的类型定义，跳出当前属性的匹配，继续检查下一个属性
+            }
+          }
+        }
+      }
+      for (ObjectDefinition otherDataObj : dataModel.getObjects()) {
+        for (AttributeDefinition idAttr : otherDataObj.getIdentifiableAttributes()) {
+          if (idAttr.getType().isCustom() && idAttr.getType().getName().equals(dataObj.getName())) {
+            String dependencyName = otherDataObj.getType().getName();
+            // 在全局 types 中寻找该自定义属性对应的类型定义（即父节点）
+            for (TypeDefinition type : this.types) {
+              if (type.isCollection()) {
+                continue;
+              }
+              // 结合 sortTypes 和 getChildren 的上下文，进行名称匹配
+              if (dependencyName.equals(type.getVariable()) || dependencyName.equals(type.getName())) {
+                parents.add(type);
+                break; // 已找到对应的类型定义，跳出当前属性的匹配，继续检查下一个属性
+              }
             }
           }
         }
