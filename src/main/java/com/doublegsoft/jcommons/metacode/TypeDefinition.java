@@ -42,6 +42,11 @@ public class TypeDefinition {
   public static final String ORIGINAL_REF = "OREF";
 
   /**
+   * 像树结构一样的父级引用的引用关系。
+   */
+  public static final String HIERARCHY_REF = "HREF";
+
+  /**
    * 自身对象（root、master、aggregate）的引用关系。
    */
   public static final String SELF_REF = "SREF";
@@ -434,7 +439,11 @@ public class TypeDefinition {
       thisObjName = thisObjName.substring(0, thisObjName.length() - 1);
     }
     if (thisObjName.equals(anotherObj.getName())) {
-      return SELF_REF;
+      if (getVariable().equals(another.getVariable())) {
+        return SELF_REF;
+      } else {
+        return HIERARCHY_REF;
+      }
     }
     if (thisObj.isLabelled("meta")) {
       if (thisObj.getLabelledOption("meta", "master") != null) {
