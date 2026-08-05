@@ -558,6 +558,9 @@ public class TypeDefinition {
         }
         return ATTRIBUTE_REF;
       }
+      if (attr.isLabelled("original")) {
+        return ORIGINAL_REF;
+      }
     }
     return NO_REF;
   }
