@@ -604,7 +604,7 @@ public class FlowDefinition {
     ObjectDefinition targetObj = dataModel.findObjectByName(targetObjName);
     AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, targetAttrName);
 
-    current.setReference(createJoinCondition(
+    current.addReference(createJoinCondition(
         sourceAttr, sourceObj, null,
         targetAttr, targetObj, null));
   }
@@ -612,7 +612,7 @@ public class FlowDefinition {
   private void buildReferences(TypeDefinition detail, AttributeDefinition attrRef, TypeDefinition master) {
     ObjectDefinition sourceObj = detail.getDefinition();
     ObjectDefinition masterObj = master.getDefinition();
-    detail.setReference(createJoinCondition(
+    detail.addReference(createJoinCondition(
         masterObj.getIdentifiableAttribute(), masterObj, master.getVariable(),
         attrRef, sourceObj, null));
   }
@@ -620,21 +620,27 @@ public class FlowDefinition {
   private void buildReferences(TypeDefinition current) {
     ObjectDefinition currObj = current.getDefinition();
     currObj = dataModel.findObjectByName(currObj.getName());
+    if (!currObj.isLabelled("persistence")) {
+      return;
+    }
     // 建立关联关系
-    for (int i = 0; i < types.size() - 1; i++) {
+    for (int i = 0; i < types.size()/* - 1*/; i++) {
       TypeDefinition prevType = types.get(i);
       ObjectDefinition prevObj = prevType.getDefinition();
       prevObj = dataModel.findObjectByName(prevObj.getName());
+      if (!prevObj.isLabelled("persistence")) {
+        continue;
+      }
       boolean isBuilt = buildReferences(currObj, prevObj, current, prevType);
       if (isBuilt) {
-        return;
+         continue;
       }
       if (!currObj.isLabelled("persistence")) {
         for (AttributeDefinition currAttr : currObj.getAttributes()) {
           if (currAttr.getType().isCustom()) {
             ObjectDefinition attrAsObj = dataModel.findObjectByName(currAttr.getType().getName());
             if (buildReferences(attrAsObj, prevObj, current, prevType)) {
-              return;
+              // continue;
             }
           }
         }
@@ -642,16 +648,18 @@ public class FlowDefinition {
       AttributeDefinition[] refAttrs = currObj.getCustomAttributes(prevObj);
       if (refAttrs.length > 0) {
         // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
-        current.setReference(createJoinCondition(
-            prevObj.getIdentifiableAttribute(), prevObj, prevType.getVariable(),
-            refAttrs[0], currObj, current.getVariable()));
+        for (AttributeDefinition refAttr : refAttrs) {
+          current.addReference(createJoinCondition(
+              prevObj.getIdentifiableAttribute(), prevObj, prevType.getVariable(),
+              refAttr, currObj, current.getVariable()));
+        }
       } else {
         // 反向引用
         refAttrs = prevObj.getCustomAttributes(currObj);
         for (AttributeDefinition refAttr : refAttrs) {
           if (Strings.isEmpty(current.getVariable()) ||
               refAttr.getName().equals(current.getVariable())) {
-            current.setReference(createJoinCondition(
+            current.addReference(createJoinCondition(
                 refAttr, prevObj, prevType.getVariable(),
                 currObj.getIdentifiableAttribute(), currObj, current.getVariable()));
             break;
@@ -663,29 +671,35 @@ public class FlowDefinition {
 
   private boolean buildReferences(ObjectDefinition thisObj, ObjectDefinition anotherObj,
                                   TypeDefinition current, TypeDefinition prevType) {
+    // thisObj中可能存在多个属性指向同一个anotherObj，比如match、graph这种情况
     AttributeDefinition[] refAttrs = thisObj.getCustomAttributes(anotherObj);
     if (refAttrs.length > 0) {
       // 正向引用，可以是多个，比如主客队，或者前置、当前、后置节点等情况
-      current.setReference(createJoinCondition(
-          anotherObj.getIdentifiableAttribute(), anotherObj, prevType.getVariable(),
-          refAttrs[0], thisObj, current.getVariable()));
-      current.getReference().setLeftObjectAlias(prevType.getVariable());
-      current.getReference().setRightObjectAlias(current.getVariable());
-      return true;
+      for (AttributeDefinition refAttr : refAttrs) {
+        current.addReference(createJoinCondition(
+            anotherObj.getIdentifiableAttribute(), anotherObj, prevType.getVariable(),
+            refAttr, thisObj, current.getVariable()));
+        JoinConditionDefinition reference = current.getReferences().get(current.getReferences().size() - 1);
+        reference.setLeftObjectAlias(prevType.getVariable());
+        reference.setRightObjectAlias(current.getVariable());
+      }
     } else {
       // 反向引用
       refAttrs = anotherObj.getCustomAttributes(thisObj);
       for (AttributeDefinition refAttr : refAttrs) {
         if (refAttr.getName().equals(current.getVariable()) ||
             refAttr.getName().equals(current.getName())) {
-          current.setReference(createJoinCondition(
+          current.addReference(createJoinCondition(
               refAttr, anotherObj, prevType.getVariable(),
               thisObj.getIdentifiableAttribute(), thisObj, current.getVariable()));
-          return true;
+        } else {
+          prevType.addReference(createJoinCondition(
+              refAttr, anotherObj, prevType.getVariable(),
+              thisObj.getIdentifiableAttribute(), thisObj, current.getVariable()));
         }
       }
     }
-    return false;
+    return refAttrs.length > 0;
   }
 
   private JoinConditionDefinition createJoinCondition(AttributeDefinition leftAttr,

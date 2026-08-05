@@ -7,6 +7,8 @@ import com.doublegsoft.jcommons.metabean.type.CollectionType;
 import com.doublegsoft.jcommons.metabean.type.CustomType;
 import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metabean.type.PrimitiveType;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TestBase {
 

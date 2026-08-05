@@ -64,7 +64,7 @@ public class TypeDefinition {
 
   private final List<MethodDefinition> methods = new ArrayList<>();
 
-  private JoinConditionDefinition reference;
+  private final List<JoinConditionDefinition> references = new ArrayList<>();
 
   // 是否是属性的直接引用
   private boolean attributeReference;
@@ -305,26 +305,41 @@ public class TypeDefinition {
     return (T) definition;
   }
 
+  public List<JoinConditionDefinition> getReferences() {
+    return references;
+  }
+
+  public void addReference(JoinConditionDefinition reference) {
+    references.add(reference);
+  }
+
   public JoinConditionDefinition getReference() {
-    return reference;
+    if (references.isEmpty()) {
+      return null;
+    }
+    return references.get(0);
   }
 
   public void setReference(JoinConditionDefinition reference) {
-    this.reference = reference;
+    if (references.isEmpty()) {
+      references.add(reference);
+    } else {
+      references.set(0, reference);
+    }
   }
 
   public AttributeDefinition getLeftAttributeFromReference() {
-    if (reference == null) {
+    if (references.isEmpty()) {
       return null;
     }
-    return reference.getJoinPredicates().get(0).getLeftAttribute();
+    return references.get(0).getJoinPredicates().get(0).getLeftAttribute();
   }
 
   public AttributeDefinition getRightAttributeFromReference() {
-    if (reference == null) {
+    if (references.isEmpty()) {
       return null;
     }
-    return reference.getJoinPredicates().get(0).getRightAttribute();
+    return references.get(0).getJoinPredicates().get(0).getRightAttribute();
   }
 
   public FieldDefinition getFieldByDefinition(Object definition) {
