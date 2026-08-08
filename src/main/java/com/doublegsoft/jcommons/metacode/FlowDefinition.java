@@ -682,6 +682,9 @@ public class FlowDefinition {
         JoinConditionDefinition reference = current.getReferences().get(current.getReferences().size() - 1);
         reference.setLeftObjectAlias(prevType.getVariable());
         reference.setRightObjectAlias(current.getVariable());
+        if (thisObj.getName().equals(anotherObj.getName()) && anotherObj.getName().equals(current.getVariable())) {
+          reference.setRightObjectAlias(refAttr.getName());
+        }
       }
     } else {
       // 反向引用
