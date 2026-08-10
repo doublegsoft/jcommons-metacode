@@ -624,7 +624,7 @@ public class FlowDefinition {
       return;
     }
     // 建立关联关系
-    for (int i = 0; i < types.size()/* - 1*/; i++) {
+    for (int i = 0; i < types.size(); i++) {
       TypeDefinition prevType = types.get(i);
       ObjectDefinition prevObj = prevType.getDefinition();
       prevObj = dataModel.findObjectByName(prevObj.getName());
