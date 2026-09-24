@@ -4,8 +4,6 @@ import com.doublegsoft.jcommons.metabean.AttributeDefinition;
 import com.doublegsoft.jcommons.metabean.ModelDefinition;
 import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.PrimitiveType;
-import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
-import com.doublegsoft.jcommons.metamodel.dataset.JoinPredicateDefinition;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -63,7 +61,7 @@ public class TreelikeTest extends TestBase {
   }
 
   @Test
-  public void test_match() throws Exception {
+  public void test_treelike() throws Exception {
     ModelDefinition dataModel = buildDataModel();
     ObjectDefinition match = dataModel.findObjectByName("tree_node");
     TypeDefinition type = new TypeDefinition(match, dataModel);

@@ -354,6 +354,7 @@ public class FlowDefinition {
           types.add(compType);
           buildReferences(compType);
           compType.setVariable(attr.getName());
+          conjType.setVariable(attr.getName());
         } else {
           TypeDefinition compType = new TypeDefinition(compObj, dataModel);
           compType.setCollection(true);
