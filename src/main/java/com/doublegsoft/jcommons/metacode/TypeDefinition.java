@@ -36,6 +36,8 @@ public class TypeDefinition {
    */
   public static final String COLLECTION_REF = "CREF";
 
+  public static final String CONJUNCTION_REF = "XREF";
+
   /**
    * 标注为original的属性的引用关系。
    */
@@ -560,6 +562,19 @@ public class TypeDefinition {
       }
       if (attr.isLabelled("original")) {
         return ORIGINAL_REF;
+      }
+    }
+    // check conjunction style
+    for (AttributeDefinition attr : thisObj.getAttributes()) {
+      if (!attr.isLabelled("conjunction")) {
+        continue;
+      }
+      String conjObjName = attr.getLabelledOption("conjunction", "object");
+      if (Strings.isEmpty(conjObjName)) {
+        conjObjName = attr.getLabelledOption("conjunction", "name");
+      }
+      if (anotherObj.getName().equals(conjObjName)) {
+        return CONJUNCTION_REF;
       }
     }
     return NO_REF;
