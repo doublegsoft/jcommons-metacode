@@ -552,7 +552,7 @@ public class FlowDefinition {
     }
 
     if (dataObj != null) {
-      // 遍历当前类型的所有属性
+      // 遍历当前类型的所有属性，主动引用（通过属性引用别的）
       for (AttributeDefinition dataAttr : dataObj.getAttributes()) {
         if (dataAttr.getType().isCustom()) {
           String dependencyName = dataAttr.getType().getName();
@@ -570,8 +570,9 @@ public class FlowDefinition {
           }
         }
       }
+      // 被动引用
       for (ObjectDefinition otherDataObj : dataModel.getObjects()) {
-        for (AttributeDefinition idAttr : otherDataObj.getIdentifiableAttributes()) {
+        for (AttributeDefinition idAttr : otherDataObj.getAttributes()/*.getIdentifiableAttributes()*/) {
           if (idAttr.getType().isCustom() && idAttr.getType().getName().equals(dataObj.getName())) {
             String dependencyName = otherDataObj.getType().getName();
             // 在全局 types 中寻找该自定义属性对应的类型定义（即父节点）
