@@ -130,6 +130,5 @@ public class BillAccountAggregateTest extends TestBase {
     TypeDefinition[] refTypeObjs = flow.getParentsAndSiblings(typeObjAccount);
     Assert.assertEquals(1, refTypeObjs.length);
     Assert.assertEquals("bill", refTypeObjs[0].getName());
-    System.out.println(refTypeObjs[0].getReference().getJoinPredicates().get(0));
   }
 }
