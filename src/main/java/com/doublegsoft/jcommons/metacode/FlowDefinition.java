@@ -8,6 +8,7 @@ import com.doublegsoft.jcommons.metabean.type.CustomType;
 import com.doublegsoft.jcommons.metabean.type.ObjectType;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinConditionDefinition;
 import com.doublegsoft.jcommons.metamodel.dataset.JoinPredicateDefinition;
+import com.doublegsoft.jcommons.utils.Safe;
 import com.doublegsoft.jcommons.utils.Strings;
 import org.w3c.dom.Attr;
 
@@ -365,8 +366,16 @@ public class FlowDefinition {
           type.addField(field);
           compType.setVariable(attr.getName());
         }
-      } else if (attr.isLabelled("conjunction")) {
+      } else if (attr.isLabelled("conjunction") &&
+          attr.getLabelledOption("conjunction", "source_object") != null &&
+          attr.getLabelledOption("conjunction", "target_object") != null) {
         // TODO: 一定要想起来在这要干什么
+        String sourceObject = attr.getLabelledOption("conjunction", "source_object");
+        String sourceAttribute = attr.getLabelledOption("conjunction", "source_attribute");
+        String sourceAttributes = attr.getLabelledOption("conjunction", "source_attributes");
+        String targetObject = attr.getLabelledOption("conjunction", "target_object");
+        String targetAttribute = attr.getLabelledOption("conjunction", "target_attribute");
+        String targetAttributes = attr.getLabelledOption("conjunction", "target_attributes");
       }
     }
   }
@@ -600,9 +609,39 @@ public class FlowDefinition {
     }
     String sourceObjName = attrRef.getLabelledOption("conjunction", "source_object");
     String sourceAttrName = attrRef.getLabelledOption("conjunction", "source_attribute");
+    String sourceAttrNames = attrRef.getLabelledOption("conjunction", "source_attributes");
     String targetObjName = attrRef.getLabelledOption("conjunction", "target_object");
     String targetAttrName = attrRef.getLabelledOption("conjunction", "target_attribute");
+    String targetAttrNames = attrRef.getLabelledOption("conjunction", "target_attributes");
 
+    List<Object> sourceAttrs = new ArrayList<>();
+    String[] attrNames = sourceAttrNames.split(",");
+    for (String attrName : attrNames) {
+      if (attrName.startsWith("\"") && attrName.endsWith("\"")) {
+        // 是字符串
+      } else if (Safe.safeInteger(attrName) != null) {
+        // 是数字
+      } else if ("now".equalsIgnoreCase(attrName)) {
+        // 是关键字
+      } else {
+        AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, attrName);
+        sourceAttrs.add(sourceAttr);
+      }
+    }
+    List<Object> targetAttrs = new ArrayList<>();
+    attrNames = targetAttrNames.split(",");
+    for (String attrName : attrNames) {
+      if (attrName.startsWith("\"") && attrName.endsWith("\"")) {
+        // 是字符串
+      } else if (Safe.safeInteger(attrName) != null) {
+        // 是数字
+      } else if ("now".equalsIgnoreCase(attrName)) {
+        // 是关键字
+      } else {
+        AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, attrName);
+        targetAttrs.add(targetAttr);
+      }
+    }
     ObjectDefinition sourceObj = dataModel.findObjectByName(sourceObjName);
     AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, sourceAttrName);
     ObjectDefinition targetObj = dataModel.findObjectByName(targetObjName);
@@ -789,6 +828,33 @@ public class FlowDefinition {
     joinPredicate.setRightObject(rightObj);
     joinPredicate.setRightObjectAlias(rightObjAlias);
     return new JoinConditionDefinition(joinPredicate);
+  }
+
+  private JoinConditionDefinition createJoinCondition(List<AttributeDefinition> leftAttrs,
+                                                      ObjectDefinition leftObj,
+                                                      String leftObjAlias,
+                                                      List<AttributeDefinition> rightAttrs,
+                                                      ObjectDefinition rightObj,
+                                                      String rightObjAlias) {
+    JoinPredicateDefinition joinPredicate = new JoinPredicateDefinition();
+    joinPredicate.setLeftAttribute(leftAttrs.get(0));
+    joinPredicate.setLeftObject(leftObj);
+    joinPredicate.setLeftObjectAlias(leftObjAlias);
+    joinPredicate.setRightAttribute(rightAttrs.get(0));
+    joinPredicate.setRightObject(rightObj);
+    joinPredicate.setRightObjectAlias(rightObjAlias);
+    JoinConditionDefinition retVal = new JoinConditionDefinition(joinPredicate);
+    for (int i = 1; i < leftAttrs.size(); i++) {
+      joinPredicate = new JoinPredicateDefinition();
+      joinPredicate.setLeftAttribute(leftAttrs.get(i));
+      joinPredicate.setLeftObject(leftObj);
+      joinPredicate.setLeftObjectAlias(leftObjAlias);
+      joinPredicate.setRightAttribute(rightAttrs.get(i));
+      joinPredicate.setRightObject(rightObj);
+      joinPredicate.setRightObjectAlias(rightObjAlias);
+      retVal.getJoinPredicates().add(joinPredicate);
+    }
+    return retVal;
   }
 
   private boolean isAttributeEquals(AttributeDefinition attr0, AttributeDefinition attr1) {
