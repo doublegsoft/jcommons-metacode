@@ -346,6 +346,9 @@ public class FlowDefinition {
         }
         if (attr.isLabelled("conjunction")) {
           String conjObjName = attr.getLabelledOption("conjunction", "object");
+          if (conjObjName == null) {
+            conjObjName = attr.getLabelledOption("conjunction", "name");
+          }
           ObjectDefinition conjObj = dataModel.findObjectByName(conjObjName);
           TypeDefinition conjType = new TypeDefinition(conjObj, dataModel);
           conjType.setCollection(true);
@@ -615,7 +618,11 @@ public class FlowDefinition {
     String targetAttrNames = attrRef.getLabelledOption("conjunction", "target_attributes");
 
     List<Object> sourceAttrs = new ArrayList<>();
-    String[] attrNames = sourceAttrNames.split(",");
+
+    String[] attrNames = new String[0];
+    if (sourceAttrNames != null) {
+      attrNames = sourceAttrNames.split(",");
+    }
     for (String attrName : attrNames) {
       if (attrName.startsWith("\"") && attrName.endsWith("\"")) {
         // 是字符串
@@ -629,7 +636,10 @@ public class FlowDefinition {
       }
     }
     List<Object> targetAttrs = new ArrayList<>();
-    attrNames = targetAttrNames.split(",");
+    attrNames = new String[0];
+    if (targetAttrNames != null) {
+      attrNames = targetAttrNames.split(",");
+    }
     for (String attrName : attrNames) {
       if (attrName.startsWith("\"") && attrName.endsWith("\"")) {
         // 是字符串
