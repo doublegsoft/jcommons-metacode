@@ -1,6 +1,7 @@
 package com.doublegsoft.jcommons.metacode;
 
 import com.doublegsoft.jcommons.metabean.AttributeDefinition;
+import com.doublegsoft.jcommons.metabean.ConstantAttributeDefinition;
 import com.doublegsoft.jcommons.metabean.ModelDefinition;
 import com.doublegsoft.jcommons.metabean.ObjectDefinition;
 import com.doublegsoft.jcommons.metabean.type.CollectionType;
@@ -617,49 +618,64 @@ public class FlowDefinition {
     String targetAttrName = attrRef.getLabelledOption("conjunction", "target_attribute");
     String targetAttrNames = attrRef.getLabelledOption("conjunction", "target_attributes");
 
-    List<Object> sourceAttrs = new ArrayList<>();
+    List<AttributeDefinition> sourceAttrs = new ArrayList<>();
+    List<AttributeDefinition> targetAttrs = new ArrayList<>();
 
     String[] attrNames = new String[0];
     if (sourceAttrNames != null) {
       attrNames = sourceAttrNames.split(",");
     }
     for (String attrName : attrNames) {
+      attrName = attrName.trim();
       if (attrName.startsWith("\"") && attrName.endsWith("\"")) {
-        // 是字符串
+        String value = attrName.substring(1, attrName.length() - 1);
+        ConstantAttributeDefinition constAttr = new ConstantAttributeDefinition(value);
+        sourceAttrs.add(constAttr);
       } else if (Safe.safeInteger(attrName) != null) {
-        // 是数字
-      } else if ("now".equalsIgnoreCase(attrName)) {
-        // 是关键字
+        Integer value = Safe.safeInteger(attrName);
+        ConstantAttributeDefinition constAttr = new ConstantAttributeDefinition(value);
+        sourceAttrs.add(constAttr);
       } else {
         AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, attrName);
         sourceAttrs.add(sourceAttr);
       }
     }
-    List<Object> targetAttrs = new ArrayList<>();
+
     attrNames = new String[0];
     if (targetAttrNames != null) {
       attrNames = targetAttrNames.split(",");
     }
     for (String attrName : attrNames) {
+      attrName = attrName.trim();
       if (attrName.startsWith("\"") && attrName.endsWith("\"")) {
-        // 是字符串
+        String value = attrName.substring(1, attrName.length() - 1);
+        ConstantAttributeDefinition constAttr = new ConstantAttributeDefinition(value);
+        targetAttrs.add(constAttr);
       } else if (Safe.safeInteger(attrName) != null) {
-        // 是数字
-      } else if ("now".equalsIgnoreCase(attrName)) {
-        // 是关键字
+        Integer value = Safe.safeInteger(attrName);
+        ConstantAttributeDefinition constAttr = new ConstantAttributeDefinition(value);
+        targetAttrs.add(constAttr);
       } else {
         AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, attrName);
         targetAttrs.add(targetAttr);
       }
     }
     ObjectDefinition sourceObj = dataModel.findObjectByName(sourceObjName);
-    AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, sourceAttrName);
     ObjectDefinition targetObj = dataModel.findObjectByName(targetObjName);
-    AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, targetAttrName);
 
-    current.addReference(createJoinCondition(
-        sourceAttr, sourceObj, null,
-        targetAttr, targetObj, null));
+    // 必须成对
+    if (!Strings.isEmpty(sourceAttrName) && !Strings.isEmpty(targetAttrName)) {
+      AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, sourceAttrName);
+      AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, targetAttrName);
+      current.addReference(createJoinCondition(
+          sourceAttr, sourceObj, null,
+          targetAttr, targetObj, null));
+    } else {
+      current.addReference(createJoinCondition(
+          sourceAttrs, sourceObj, null,
+          targetAttrs, targetObj, null));
+    }
+
   }
 
   private void buildReferences(TypeDefinition detail, AttributeDefinition attrRef, TypeDefinition master) {
