@@ -663,17 +663,24 @@ public class FlowDefinition {
     ObjectDefinition sourceObj = dataModel.findObjectByName(sourceObjName);
     ObjectDefinition targetObj = dataModel.findObjectByName(targetObjName);
 
+    String sourceVariable = null;
+    for (AttributeDefinition attr : attrRef.getParent().getAttributes()) {
+      if (attr.getType().isCustom() && attr.getType().getName().equals(sourceObj.getName())) {
+        sourceVariable = attr.getName();
+        break;
+      }
+    }
     // 必须成对
     if (!Strings.isEmpty(sourceAttrName) && !Strings.isEmpty(targetAttrName)) {
       AttributeDefinition sourceAttr = dataModel.findAttributeByNames(sourceObjName, sourceAttrName);
       AttributeDefinition targetAttr = dataModel.findAttributeByNames(targetObjName, targetAttrName);
       current.addReference(createJoinCondition(
-          sourceAttr, sourceObj, null,
-          targetAttr, targetObj, null));
+          sourceAttr, sourceObj, sourceVariable,
+          targetAttr, targetObj, attrRef.getName()));
     } else {
       current.addReference(createJoinCondition(
-          sourceAttrs, sourceObj, null,
-          targetAttrs, targetObj, null));
+          sourceAttrs, sourceObj, sourceVariable,
+          targetAttrs, targetObj, attrRef.getName()));
     }
 
   }
