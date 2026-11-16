@@ -682,7 +682,6 @@ public class FlowDefinition {
           sourceAttrs, sourceObj, sourceVariable,
           targetAttrs, targetObj, attrRef.getName()));
     }
-
   }
 
   private void buildReferences(TypeDefinition detail, AttributeDefinition attrRef, TypeDefinition master) {
